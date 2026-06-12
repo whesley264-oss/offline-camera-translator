@@ -9,43 +9,26 @@ import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class TranslationService(private val context: Context) {
     
     private val translators = mutableMapOf<Pair<String, String>, Translator>()
     private val modelManager = RemoteModelManager.getInstance()
     
-    // Bundled languages that come with the app
-    val bundledLanguages = setOf(Language.DEFAULT_SOURCE, Language.DEFAULT_TARGET)
-    
-    init {
-        // Register bundled models on initialization
-        registerBundledModels()
-    }
-    
-    private fun registerBundledModels() {
-        // The bundled models are automatically registered by ML Kit
-        // We just need to ensure they're recognized as downloaded
-    }
+    // Base languages (en, pt) - will be auto-downloaded on first use
+    val baseLanguages = setOf(Language.DEFAULT_SOURCE, Language.DEFAULT_TARGET)
     
     suspend fun downloadLanguage(sourceLang: String, targetLang: String): Result<Unit> {
         return suspendCancellableCoroutine { continuation ->
-            val conditions = DownloadConditions.Builder()
-                .requireWifi()
-                .build()
+            val conditions = DownloadConditions.Builder().build()
             
-            getOrCreateTranslator(sourceLang, targetLang).downloadModelIfNeeded(conditions)
+            getOrCreateTranslator(sourceLang, targetLang).download(conditions)
                 .addOnSuccessListener {
                     continuation.resume(Result.success(Unit))
                 }
                 .addOnFailureListener { e ->
                     continuation.resume(Result.failure(e))
                 }
-            
-            continuation.invokeOnCancellation {
-                // Model download is cancelled
-            }
         }
     }
     
@@ -55,17 +38,22 @@ class TranslationService(private val context: Context) {
         return suspendCancellableCoroutine { continuation ->
             val translator = getOrCreateTranslator(sourceLang, targetLang)
             
-            translator.translate(text)
-                .addOnSuccessListener { translatedText ->
-                    continuation.resume(Result.success(translatedText))
+            // First ensure model is downloaded
+            val conditions = DownloadConditions.Builder().build()
+            translator.download(conditions)
+                .addOnSuccessListener {
+                    // Then translate
+                    translator.translate(text)
+                        .addOnSuccessListener { translatedText ->
+                            continuation.resume(Result.success(translatedText))
+                        }
+                        .addOnFailureListener { e ->
+                            continuation.resume(Result.failure(e))
+                        }
                 }
                 .addOnFailureListener { e ->
                     continuation.resume(Result.failure(e))
                 }
-            
-            continuation.invokeOnCancellation {
-                // Translation is cancelled
-            }
         }
     }
     
@@ -73,24 +61,15 @@ class TranslationService(private val context: Context) {
         return suspendCancellableCoroutine { continuation ->
             modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
                 .addOnSuccessListener { models ->
-                    // Include bundled languages even if not downloaded
-                    val downloadedCodes = models.map { it.language }.toMutableSet()
-                    downloadedCodes.addAll(bundledLanguages)
-                    continuation.resume(downloadedCodes)
+                    continuation.resume(models.map { it.language }.toSet())
                 }
                 .addOnFailureListener {
-                    // Return bundled languages on failure
-                    continuation.resume(bundledLanguages)
+                    continuation.resume(emptySet())
                 }
         }
     }
     
     suspend fun deleteLanguage(langCode: String): Result<Unit> {
-        // Cannot delete bundled languages
-        if (bundledLanguages.contains(langCode)) {
-            return Result.failure(Exception("Cannot delete bundled language"))
-        }
-        
         return suspendCancellableCoroutine { continuation ->
             modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
                 .addOnSuccessListener { models ->
@@ -114,16 +93,9 @@ class TranslationService(private val context: Context) {
     }
     
     fun isModelDownloaded(langCode: String, callback: (Boolean) -> Unit) {
-        // Bundled languages are always available
-        if (bundledLanguages.contains(langCode)) {
-            callback(true)
-            return
-        }
-        
         modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
             .addOnSuccessListener { models ->
-                val isDownloaded = models.any { it.language == langCode }
-                callback(isDownloaded)
+                callback(models.any { it.language == langCode })
             }
             .addOnFailureListener { callback(false) }
     }

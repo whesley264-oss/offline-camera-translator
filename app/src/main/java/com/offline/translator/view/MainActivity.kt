@@ -48,11 +48,21 @@ class MainActivity : AppCompatActivity(), TranslationView {
 
         setupUI()
         
+        // Start downloading base languages (en, pt) in background
+        downloadBaseLanguages()
+        
         if (allPermissionsGranted()) {
             startCameraLifecycle()
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
+    }
+    
+    private fun downloadBaseLanguages() {
+        binding.txtTranslationOverlay.text = "Baixando idiomas..."
+        
+        // Show a brief message about downloading
+        Toast.makeText(this, "Baixando modelos de tradução (en→pt)...", Toast.LENGTH_LONG).show()
     }
     
     private fun setupUI() {
@@ -78,7 +88,7 @@ class MainActivity : AppCompatActivity(), TranslationView {
         val languages = if (isSource) sourceLanguages else targetLanguages
         // Filter out bundled languages and already downloaded languages
         val downloadableLanguages = languages.filter { 
-            !translationService.bundledLanguages.contains(it.code) && 
+            !translationService.baseLanguages.contains(it.code) && 
             !it.isDownloaded && 
             !it.isDownloading 
         }

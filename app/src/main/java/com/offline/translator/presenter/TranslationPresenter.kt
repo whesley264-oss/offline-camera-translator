@@ -22,14 +22,9 @@ class TranslationPresenter(
     }
     
     private suspend fun loadDownloadedLanguages() {
-        // Get downloaded models from ML Kit
         val models = translationService.getDownloadedModels()
         downloadedLanguages.clear()
         downloadedLanguages.addAll(models)
-        
-        // Bundled languages (en, pt) are always available
-        downloadedLanguages.addAll(translationService.bundledLanguages)
-        
         updateLanguageLists()
     }
     
@@ -38,18 +33,11 @@ class TranslationPresenter(
             lang.copy(isDownloaded = downloadedLanguages.contains(lang.code))
         }
         val targetLangs = sourceLangs.filter { it.code != view.getSelectedSourceLanguage() }
-        
         view.updateLanguageLists(sourceLangs, targetLangs)
     }
     
     fun downloadLanguage(langCode: String) {
         val language = Language.fromCode(langCode) ?: return
-        
-        // Cannot download bundled languages
-        if (translationService.bundledLanguages.contains(langCode)) {
-            view.showError("${language.name} já está disponível no app")
-            return
-        }
         
         scope.launch {
             language.isDownloading = true
@@ -81,6 +69,17 @@ class TranslationPresenter(
     fun processFrame(bitmap: Bitmap) {
         scope.launch {
             view.showLoading(true)
+            
+            // Ensure models are downloaded first
+            val sourceLang = view.getSelectedSourceLanguage()
+            val targetLang = view.getSelectedTargetLanguage()
+            
+            val downloadResult = translationService.downloadLanguage(sourceLang, targetLang)
+            if (downloadResult.isFailure) {
+                view.showError("Erro ao baixar modelo: ${downloadResult.exceptionOrNull()?.message}")
+                view.showLoading(false)
+                return@launch
+            }
             
             // 1. Recognize text from image
             val recognitionResult = textRecognitionService.recognizeText(bitmap)
