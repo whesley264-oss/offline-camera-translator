@@ -171,10 +171,9 @@ class MainActivity : AppCompatActivity(), TranslationView {
     
     private fun processImage(imageProxy: ImageProxy) {
         val bitmap = imageProxy.toBitmap()
-        binding.viewFinder.setBitmapSize(bitmap.width, bitmap.height)
         presenter.processFrameWithDetectedBoxes(bitmap) { boxes ->
             runOnUiThread {
-                binding.viewFinder.setTextBlocks(boxes)
+                binding.selectionOverlay.setDetectedTextBoxes(boxes)
             }
         }
         imageProxy.close()
@@ -228,6 +227,10 @@ class MainActivity : AppCompatActivity(), TranslationView {
     
     override fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+    
+    override fun showDetectedTextBoxes(boxes: List<RectF>) {
+        binding.selectionOverlay.setDetectedTextBoxes(boxes)
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
