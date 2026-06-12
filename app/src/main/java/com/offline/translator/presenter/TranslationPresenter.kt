@@ -70,7 +70,6 @@ class TranslationPresenter(
         scope.launch {
             view.showLoading(true)
             
-            // Ensure models are downloaded first
             val sourceLang = view.getSelectedSourceLanguage()
             val targetLang = view.getSelectedTargetLanguage()
             
@@ -81,7 +80,6 @@ class TranslationPresenter(
                 return@launch
             }
             
-            // 1. Recognize text from image
             val recognitionResult = textRecognitionService.recognizeText(bitmap)
             
             recognitionResult.fold(
@@ -95,6 +93,25 @@ class TranslationPresenter(
                 onFailure = { e ->
                     view.showError("OCR Error: ${e.message}")
                     view.showLoading(false)
+                }
+            )
+        }
+    }
+    
+    fun processFrameWithDetectedBoxes(bitmap: Bitmap, onBoxesDetected: (List<android.graphics.RectF>) -> Unit) {
+        scope.launch {
+            val recognitionResult = textRecognitionService.recognizeTextWithBoxes(bitmap)
+            
+            recognitionResult.fold(
+                onSuccess = { (text, boxes) ->
+                    onBoxesDetected(boxes)
+                    if (text.isNotBlank()) {
+                        view.showLoading(true)
+                        translateText(text)
+                    }
+                },
+                onFailure = {
+                    onBoxesDetected(emptyList())
                 }
             )
         }

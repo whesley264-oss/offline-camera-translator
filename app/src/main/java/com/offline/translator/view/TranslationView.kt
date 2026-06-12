@@ -12,4 +12,5 @@ interface TranslationView {
     fun showDownloadSuccess(language: Language)
     fun showDownloadError(language: Language, error: String)
     fun showLoading(isLoading: Boolean)
+    fun showDetectedTextBoxes(boxes: List<android.graphics.RectF>)
 }
