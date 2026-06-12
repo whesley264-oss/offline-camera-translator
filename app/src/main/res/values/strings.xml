@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Offline Translator</string>
+    <string name="camera_permission_required">Camera permission is required</string>
+    <string name="no_dictionary_found">No dictionary found (.bin)</string>
+    <string name="select_dictionary">Select dictionary</string>
+    <string name="point_camera">Point camera to start...</string>
+</resources>
