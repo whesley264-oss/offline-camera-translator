@@ -71,10 +71,20 @@ class TranslationService(private val context: Context) {
     
     suspend fun deleteLanguage(langCode: String): Result<Unit> {
         return suspendCancellableCoroutine { continuation ->
-            val model = TranslateRemoteModel.newBuilder(langCode).build()
-            modelManager.deleteDownloadedModel(model)
-                .addOnSuccessListener {
-                    continuation.resume(Result.success(Unit))
+            modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
+                .addOnSuccessListener { models ->
+                    val model = models.find { it.language == langCode }
+                    if (model != null) {
+                        modelManager.deleteDownloadedModel(model)
+                            .addOnSuccessListener {
+                                continuation.resume(Result.success(Unit))
+                            }
+                            .addOnFailureListener { e ->
+                                continuation.resume(Result.failure(e))
+                            }
+                    } else {
+                        continuation.resume(Result.failure(Exception("Model not found")))
+                    }
                 }
                 .addOnFailureListener { e ->
                     continuation.resume(Result.failure(e))
@@ -83,9 +93,11 @@ class TranslationService(private val context: Context) {
     }
     
     fun isModelDownloaded(langCode: String, callback: (Boolean) -> Unit) {
-        val model = TranslateRemoteModel.newBuilder(langCode).build()
-        modelManager.isModelDownloaded(model)
-            .addOnSuccessListener { isDownloaded -> callback(isDownloaded) }
+        modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
+            .addOnSuccessListener { models ->
+                val isDownloaded = models.any { it.language == langCode }
+                callback(isDownloaded)
+            }
             .addOnFailureListener { callback(false) }
     }
     

@@ -1,5 +1,7 @@
 package com.offline.translator.view
 
+import com.offline.translator.model.Language
+
 interface TranslationView {
     fun showTranslation(translatedText: String)
     fun showError(message: String)
