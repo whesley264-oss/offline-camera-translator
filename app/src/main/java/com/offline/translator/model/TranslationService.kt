@@ -15,18 +15,18 @@ class TranslationService(private val context: Context) {
     private val translators = mutableMapOf<Pair<String, String>, Translator>()
     private val modelManager = RemoteModelManager.getInstance()
     
-    // Base languages (en, pt) - will be auto-downloaded on first use
+    // Base languages (en, pt)
     val baseLanguages = setOf(Language.DEFAULT_SOURCE, Language.DEFAULT_TARGET)
     
     suspend fun downloadLanguage(sourceLang: String, targetLang: String): Result<Unit> {
         return suspendCancellableCoroutine { continuation ->
             val conditions = DownloadConditions.Builder().build()
             
-            getOrCreateTranslator(sourceLang, targetLang).download(conditions)
+            getOrCreateTranslator(sourceLang, targetLang).downloadModelIfNeeded(conditions)
                 .addOnSuccessListener {
                     continuation.resume(Result.success(Unit))
                 }
-                .addOnFailureListener { e ->
+                .addOnFailureListener { e: Exception ->
                     continuation.resume(Result.failure(e))
                 }
         }
@@ -40,18 +40,18 @@ class TranslationService(private val context: Context) {
             
             // First ensure model is downloaded
             val conditions = DownloadConditions.Builder().build()
-            translator.download(conditions)
+            translator.downloadModelIfNeeded(conditions)
                 .addOnSuccessListener {
                     // Then translate
                     translator.translate(text)
                         .addOnSuccessListener { translatedText ->
                             continuation.resume(Result.success(translatedText))
                         }
-                        .addOnFailureListener { e ->
+                        .addOnFailureListener { e: Exception ->
                             continuation.resume(Result.failure(e))
                         }
                 }
-                .addOnFailureListener { e ->
+                .addOnFailureListener { e: Exception ->
                     continuation.resume(Result.failure(e))
                 }
         }
@@ -79,14 +79,14 @@ class TranslationService(private val context: Context) {
                             .addOnSuccessListener {
                                 continuation.resume(Result.success(Unit))
                             }
-                            .addOnFailureListener { e ->
+                            .addOnFailureListener { e: Exception ->
                                 continuation.resume(Result.failure(e))
                             }
                     } else {
                         continuation.resume(Result.failure(Exception("Model not found")))
                     }
                 }
-                .addOnFailureListener { e ->
+                .addOnFailureListener { e: Exception ->
                     continuation.resume(Result.failure(e))
                 }
         }
