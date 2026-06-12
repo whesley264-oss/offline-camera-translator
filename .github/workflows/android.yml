@@ -22,27 +22,46 @@ jobs:
         cache: 'gradle'
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
+      run: |
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+
+    - name: Cache Android SDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.android
+          ~/Android
+          /opt/hostedtoolcache/android-sdk*
+        key: android-sdk-${{ runner.os }}-v1
+
+    - name: Install Android SDK
+      run: |
+        if [ ! -d "$HOME/android-sdk" ]; then
+          mkdir -p "$HOME/android-sdk"
+          cd "$HOME/android-sdk"
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
+          yes | ./cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          ./cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;25.2.9519653" > /dev/null 2>&1
+        fi
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build debug APK
-      run: ./gradlew assembleDebug --no-daemon
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_HOME || '/opt/android-sdk' }}
+        ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT || '/opt/android-sdk' }}
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
+      if: success()
       with:
         name: app-debug.apk
         path: app/build/outputs/apk/debug/app-debug.apk
-
-    - name: Upload AAB (Release)
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: ./gradlew assembleRelease --no-daemon
-
-    - name: Upload AAB artifact
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release.aab
-        path: app/build/outputs/apk/release/app-release.aab
