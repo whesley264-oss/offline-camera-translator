@@ -61,4 +61,13 @@ dependencies {
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
+    
+    // ML Kit Translation (offline)
+    implementation("com.google.mlkit:translate:17.0.2")
+    
+    // ML Kit Text Recognition (OCR)
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    
+    // Lifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 }

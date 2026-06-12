@@ -2,7 +2,17 @@
 <resources>
     <string name="app_name">Offline Translator</string>
     <string name="camera_permission_required">Camera permission is required</string>
-    <string name="no_dictionary_found">No dictionary found (.bin)</string>
-    <string name="select_dictionary">Select dictionary</string>
-    <string name="point_camera">Point camera to start...</string>
+    <string name="source_language">Source</string>
+    <string name="target_language">Target</string>
+    <string name="download">Download</string>
+    <string name="swap_languages">Swap languages</string>
+    <string name="point_camera">Point camera at English text...</string>
+    <string name="downloading">Downloading...</string>
+    <string name="downloaded">Downloaded</string>
+    <string name="tap_to_download">Tap to download</string>
+    <string name="download_source_language">Download Source Language</string>
+    <string name="download_target_language">Download Target Language</string>
+    <string name="cancel">Cancel</string>
+    <string name="download_success">%s downloaded successfully!</string>
+    <string name="download_error">Error downloading %s: %s</string>
 </resources>
