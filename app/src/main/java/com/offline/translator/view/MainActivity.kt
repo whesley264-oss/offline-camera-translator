@@ -76,22 +76,25 @@ class MainActivity : AppCompatActivity(), TranslationView {
     
     private fun showDownloadDialog(isSource: Boolean) {
         val languages = if (isSource) sourceLanguages else targetLanguages
-        val langNames = languages.map { 
-            val status = when {
-                it.isDownloading -> " (Baixando...)"
-                it.isDownloaded -> " ✓"
-                else -> " (Toque para baixar)"
-            }
-            "${it.name}$status"
-        }.toTypedArray()
+        // Filter out bundled languages and already downloaded languages
+        val downloadableLanguages = languages.filter { 
+            !translationService.bundledLanguages.contains(it.code) && 
+            !it.isDownloaded && 
+            !it.isDownloading 
+        }
+        
+        if (downloadableLanguages.isEmpty()) {
+            Toast.makeText(this, "Todos os idiomas já estão disponíveis!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        val langNames = downloadableLanguages.map { "${it.name} (Toque para baixar)" }.toTypedArray()
         
         AlertDialog.Builder(this)
             .setTitle(if (isSource) "Baixar Idioma de Origem" else "Baixar Idioma de Destino")
             .setItems(langNames) { _, which ->
-                val selectedLang = languages[which]
-                if (!selectedLang.isDownloaded && !selectedLang.isDownloading) {
-                    presenter.downloadLanguage(selectedLang.code)
-                }
+                val selectedLang = downloadableLanguages[which]
+                presenter.downloadLanguage(selectedLang.code)
             }
             .setNegativeButton("Cancelar", null)
             .show()

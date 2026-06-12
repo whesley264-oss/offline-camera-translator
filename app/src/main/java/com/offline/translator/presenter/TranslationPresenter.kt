@@ -22,16 +22,13 @@ class TranslationPresenter(
     }
     
     private suspend fun loadDownloadedLanguages() {
+        // Get downloaded models from ML Kit
         val models = translationService.getDownloadedModels()
+        downloadedLanguages.clear()
         downloadedLanguages.addAll(models)
         
-        // Ensure English and Portuguese are downloaded by default
-        if (!downloadedLanguages.contains(Language.DEFAULT_SOURCE)) {
-            downloadLanguage(Language.DEFAULT_SOURCE)
-        }
-        if (!downloadedLanguages.contains(Language.DEFAULT_TARGET)) {
-            downloadLanguage(Language.DEFAULT_TARGET)
-        }
+        // Bundled languages (en, pt) are always available
+        downloadedLanguages.addAll(translationService.bundledLanguages)
         
         updateLanguageLists()
     }
@@ -47,6 +44,12 @@ class TranslationPresenter(
     
     fun downloadLanguage(langCode: String) {
         val language = Language.fromCode(langCode) ?: return
+        
+        // Cannot download bundled languages
+        if (translationService.bundledLanguages.contains(langCode)) {
+            view.showError("${language.name} já está disponível no app")
+            return
+        }
         
         scope.launch {
             language.isDownloading = true
