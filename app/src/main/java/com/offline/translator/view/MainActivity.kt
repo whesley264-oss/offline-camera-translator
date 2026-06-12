@@ -31,16 +31,12 @@ class MainActivity : AppCompatActivity(), TranslationView {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var translationService: TranslationService
     private lateinit var textRecognitionService: TextRecognitionService
+    private var imageCapture: ImageCapture? = null
     
     private var selectedSourceLang = Language.DEFAULT_SOURCE
     private var selectedTargetLang = Language.DEFAULT_TARGET
     private var sourceLanguages: List<Language> = emptyList()
     private var targetLanguages: List<Language> = emptyList()
-
-    private var currentBrightness = 1.0f
-    private var currentContrast = 1.0f
-    private var lastProcessedTime = 0L
-    private val processInterval = 1500L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +51,7 @@ class MainActivity : AppCompatActivity(), TranslationView {
         setupUI()
         
         if (allPermissionsGranted()) {
-            startCameraLifecycle()
+            startCamera()
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
@@ -80,9 +76,45 @@ class MainActivity : AppCompatActivity(), TranslationView {
                 if (binding.selectionOverlay.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
         
+        // Capture button - take photo and translate
+        binding.btnCapture.setOnClickListener {
+            captureAndTranslate()
+        }
+        
         binding.selectionOverlay.onSelectionChanged = { rect ->
             processSelectedArea(rect)
         }
+    }
+    
+    private fun captureAndTranslate() {
+        val imageCapture = imageCapture ?: return
+        
+        showLoading(true)
+        binding.txtTranslationOverlay.visibility = View.GONE
+        
+        imageCapture.takePicture(
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    val bitmap = image.toBitmap()
+                    image.close()
+                    
+                    // Check if user selected an area
+                    val selectionRect = binding.selectionOverlay.getSelectionRect()
+                    if (selectionRect.width() > 50 && selectionRect.height() > 50) {
+                        processSelectedArea(selectionRect)
+                    } else {
+                        // Process full image
+                        presenter.processFrame(bitmap)
+                    }
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    showLoading(false)
+                    showError("Erro ao capturar imagem: ${exception.message}")
+                }
+            }
+        )
     }
     
     private fun processSelectedArea(rect: RectF) {
@@ -105,32 +137,6 @@ class MainActivity : AppCompatActivity(), TranslationView {
     private fun showQualitySettings() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_quality_settings, null)
         
-        val seekBrightness = dialogView.findViewById<SeekBar>(R.id.seekBrightness)
-        val seekContrast = dialogView.findViewById<SeekBar>(R.id.seekContrast)
-        val txtBrightness = dialogView.findViewById<android.widget.TextView>(R.id.txtBrightnessValue)
-        val txtContrast = dialogView.findViewById<android.widget.TextView>(R.id.txtContrastValue)
-        
-        seekBrightness.progress = ((currentBrightness - 0.5f) * 100).toInt()
-        seekContrast.progress = ((currentContrast - 0.5f) * 100).toInt()
-        
-        seekBrightness.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                currentBrightness = 0.5f + progress / 100f
-                txtBrightness.text = "${(currentBrightness * 100).toInt()}%"
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        
-        seekContrast.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                currentContrast = 0.5f + progress / 100f
-                txtContrast.text = "${(currentContrast * 100).toInt()}%"
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        
         AlertDialog.Builder(this)
             .setTitle("Configurações de Imagem")
             .setView(dialogView)
@@ -138,53 +144,41 @@ class MainActivity : AppCompatActivity(), TranslationView {
             .show()
     }
 
-    private fun startCameraLifecycle() {
+    private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            
             val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             }
             
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            imageCapture = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .build()
-                .also { analysis ->
-                    analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                        val currentTime = System.currentTimeMillis()
-                        if (currentTime - lastProcessedTime >= processInterval) {
-                            lastProcessedTime = currentTime
-                            processImage(imageProxy)
-                        } else {
-                            imageProxy.close()
-                        }
-                    }
-                }
+            
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalyzer)
+                cameraProvider.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    imageCapture
+                )
             } catch (xc: Exception) {
                 Log.e("MainActivity", "Camera binding failed", xc)
             }
         }, ContextCompat.getMainExecutor(this))
     }
-    
-    private fun processImage(imageProxy: ImageProxy) {
-        val bitmap = imageProxy.toBitmap()
-        presenter.processFrameWithDetectedBoxes(bitmap) { boxes ->
-            runOnUiThread {
-                binding.selectionOverlay.setDetectedTextBoxes(boxes)
-            }
-        }
-        imageProxy.close()
-    }
 
     override fun showTranslation(translatedText: String) {
+        showLoading(false)
         binding.txtTranslationOverlay.text = translatedText
         binding.txtTranslationOverlay.visibility = View.VISIBLE
     }
 
     override fun showError(message: String) {
+        showLoading(false)
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     } 
 
@@ -227,6 +221,7 @@ class MainActivity : AppCompatActivity(), TranslationView {
     
     override fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.btnCapture.isEnabled = !isLoading
     }
     
     override fun showDetectedTextBoxes(boxes: List<RectF>) {
