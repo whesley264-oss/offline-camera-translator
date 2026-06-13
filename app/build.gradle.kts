@@ -65,6 +65,9 @@ dependencies {
     // ViewPager2
     implementation("androidx.viewpager2:viewpager2:1.0.0")
     
+    // RecyclerView
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    
     // ML Kit Translation (offline)
     implementation("com.google.mlkit:translate:17.0.2")
     

@@ -1,10 +1,12 @@
 package com.offline.translator.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.offline.translator.databinding.FragmentTextTranslationBinding
@@ -19,10 +21,9 @@ class TextTranslationFragment : Fragment() {
     private lateinit var translationService: TranslationService
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
-    private var sourceLanguages: List<Language> = emptyList()
-    private var targetLanguages: List<Language> = emptyList()
-    private var selectedSource = Language.DEFAULT_SOURCE
-    private var selectedTarget = Language.DEFAULT_TARGET
+    private var downloadedLanguages: List<Language> = emptyList()
+    private var selectedSource = "en"
+    private var selectedTarget = "pt"
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTextTranslationBinding.inflate(inflater, container, false)
@@ -35,7 +36,7 @@ class TextTranslationFragment : Fragment() {
         setupUI()
         loadLanguages()
     }
-    
+
     private fun setupUI() {
         binding.btnSwap.setOnClickListener {
             val temp = selectedSource
@@ -47,29 +48,46 @@ class TextTranslationFragment : Fragment() {
         binding.btnTranslate.setOnClickListener {
             translateText()
         }
+
+        binding.btnLibrary.setOnClickListener {
+            startActivity(Intent(requireContext(), LanguageLibraryActivity::class.java))
+        }
     }
     
     private fun loadLanguages() {
         scope.launch {
             val downloaded = translationService.getDownloadedModels()
-            sourceLanguages = Language.SUPPORTED_LANGUAGES.map { it.copy(isDownloaded = downloaded.contains(it.code)) }
-            targetLanguages = sourceLanguages.filter { it.code != selectedSource }
+            downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { downloaded.contains(it.code) }
             
-            val sourceAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sourceLanguages.map { it.name })
+            if (downloadedLanguages.size < 2) {
+                Toast.makeText(context, "Baixe idiomas na Biblioteca primeiro!", Toast.LENGTH_LONG).show()
+                binding.btnTranslate.isEnabled = false
+                return@launch
+            }
+            
+            binding.btnTranslate.isEnabled = true
+            
+            val sourceAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, downloadedLanguages.map { it.name })
             sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerSource.adapter = sourceAdapter
             
-            val targetAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, targetLanguages.map { it.name })
+            val targetAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, downloadedLanguages.map { it.name })
             targetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerTarget.adapter = targetAdapter
             
-            updateSpinnerSelections()
+            // Default: English -> Portuguese
+            val sourceIndex = downloadedLanguages.indexOfFirst { it.code == "en" }
+            val targetIndex = downloadedLanguages.indexOfFirst { it.code == "pt" }
+            if (sourceIndex >= 0) binding.spinnerSource.setSelection(sourceIndex)
+            if (targetIndex >= 0) binding.spinnerTarget.setSelection(targetIndex)
+            selectedSource = "en"
+            selectedTarget = "pt"
         }
     }
     
     private fun updateSpinnerSelections() {
-        val sourceIndex = sourceLanguages.indexOfFirst { it.code == selectedSource }
-        val targetIndex = targetLanguages.indexOfFirst { it.code == selectedTarget }
+        val sourceIndex = downloadedLanguages.indexOfFirst { it.code == selectedSource }
+        val targetIndex = downloadedLanguages.indexOfFirst { it.code == selectedTarget }
         if (sourceIndex >= 0) binding.spinnerSource.setSelection(sourceIndex)
         if (targetIndex >= 0) binding.spinnerTarget.setSelection(targetIndex)
     }
@@ -81,17 +99,25 @@ class TextTranslationFragment : Fragment() {
             return
         }
         
+        if (downloadedLanguages.isEmpty()) {
+            Toast.makeText(context, "Baixe idiomas primeiro!", Toast.LENGTH_LONG).show()
+            return
+        }
+        
+        // Update selections from spinners
+        val sourcePos = binding.spinnerSource.selectedItemPosition
+        val targetPos = binding.spinnerTarget.selectedItemPosition
+        if (sourcePos >= 0 && sourcePos < downloadedLanguages.size) {
+            selectedSource = downloadedLanguages[sourcePos].code
+        }
+        if (targetPos >= 0 && targetPos < downloadedLanguages.size) {
+            selectedTarget = downloadedLanguages[targetPos].code
+        }
+        
         binding.btnTranslate.isEnabled = false
         binding.editTextOutput.setText("")
         
         scope.launch {
-            val downloadResult = translationService.downloadLanguage(selectedSource, selectedTarget)
-            if (downloadResult.isFailure) {
-                Toast.makeText(context, "Erro: ${downloadResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                binding.btnTranslate.isEnabled = true
-                return@launch
-            }
-            
             val result = translationService.translate(inputText, selectedSource, selectedTarget)
             binding.btnTranslate.isEnabled = true
             
@@ -104,6 +130,11 @@ class TextTranslationFragment : Fragment() {
                 }
             )
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadLanguages()
     }
 
     override fun onDestroyView() {

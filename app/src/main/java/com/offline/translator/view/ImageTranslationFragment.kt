@@ -1,6 +1,7 @@
 package com.offline.translator.view
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -33,10 +34,9 @@ class ImageTranslationFragment : Fragment() {
     
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
-    private var sourceLanguages: List<Language> = emptyList()
-    private var targetLanguages: List<Language> = emptyList()
-    private var selectedSource = Language.DEFAULT_SOURCE
-    private var selectedTarget = Language.DEFAULT_TARGET
+    private var downloadedLanguages: List<Language> = emptyList()
+    private var selectedSource = "en"
+    private var selectedTarget = "pt"
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else Toast.makeText(context, "Permissão de câmera negada", Toast.LENGTH_SHORT).show()
@@ -73,29 +73,45 @@ class ImageTranslationFragment : Fragment() {
             binding.selectionOverlay.visibility = 
                 if (binding.selectionOverlay.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
+
+        binding.btnLibrary.setOnClickListener {
+            startActivity(Intent(requireContext(), LanguageLibraryActivity::class.java))
+        }
     }
     
     private fun loadLanguages() {
         scope.launch {
             val downloaded = translationService.getDownloadedModels()
-            sourceLanguages = Language.SUPPORTED_LANGUAGES.map { it.copy(isDownloaded = downloaded.contains(it.code)) }
-            targetLanguages = sourceLanguages.filter { it.code != selectedSource }
+            downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { downloaded.contains(it.code) }
             
-            val sourceAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sourceLanguages.map { it.name })
+            if (downloadedLanguages.isEmpty()) {
+                Toast.makeText(context, "Baixe idiomas na Biblioteca primeiro!", Toast.LENGTH_LONG).show()
+                binding.btnCapture.isEnabled = false
+                return@launch
+            }
+            
+            binding.btnCapture.isEnabled = true
+            
+            val sourceAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, downloadedLanguages.map { it.name })
             sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerSource.adapter = sourceAdapter
             
-            val targetAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, targetLanguages.map { it.name })
+            val targetAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, downloadedLanguages.map { it.name })
             targetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerTarget.adapter = targetAdapter
             
-            updateSpinnerSelections()
+            val sourceIndex = downloadedLanguages.indexOfFirst { it.code == "en" }
+            val targetIndex = downloadedLanguages.indexOfFirst { it.code == "pt" }
+            if (sourceIndex >= 0) binding.spinnerSource.setSelection(sourceIndex)
+            if (targetIndex >= 0) binding.spinnerTarget.setSelection(targetIndex)
+            selectedSource = "en"
+            selectedTarget = "pt"
         }
     }
     
     private fun updateSpinnerSelections() {
-        val sourceIndex = sourceLanguages.indexOfFirst { it.code == selectedSource }
-        val targetIndex = targetLanguages.indexOfFirst { it.code == selectedTarget }
+        val sourceIndex = downloadedLanguages.indexOfFirst { it.code == selectedSource }
+        val targetIndex = downloadedLanguages.indexOfFirst { it.code == selectedTarget }
         if (sourceIndex >= 0) binding.spinnerSource.setSelection(sourceIndex)
         if (targetIndex >= 0) binding.spinnerTarget.setSelection(targetIndex)
     }
@@ -120,7 +136,22 @@ class ImageTranslationFragment : Fragment() {
     }
     
     private fun captureAndTranslate() {
+        if (downloadedLanguages.isEmpty()) {
+            Toast.makeText(context, "Baixe idiomas primeiro!", Toast.LENGTH_LONG).show()
+            return
+        }
+
         val capture = imageCapture ?: return
+        
+        // Get selected languages from spinners
+        val sourcePos = binding.spinnerSource.selectedItemPosition
+        val targetPos = binding.spinnerTarget.selectedItemPosition
+        if (sourcePos >= 0 && sourcePos < downloadedLanguages.size) {
+            selectedSource = downloadedLanguages[sourcePos].code
+        }
+        if (targetPos >= 0 && targetPos < downloadedLanguages.size) {
+            selectedTarget = downloadedLanguages[targetPos].code
+        }
         
         binding.progressBar.visibility = View.VISIBLE
         binding.txtResult.visibility = View.GONE
@@ -151,13 +182,6 @@ class ImageTranslationFragment : Fragment() {
                     (rect.height() * scaleY).toInt().coerceIn(1, bitmap.height))
             } else bitmap
             
-            val downloadResult = translationService.downloadLanguage(selectedSource, selectedTarget)
-            if (downloadResult.isFailure) {
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(context, "Erro: ${downloadResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                return@launch
-            }
-            
             val ocrResult = textRecognitionService.recognizeText(finalBitmap)
             ocrResult.fold(
                 onSuccess = { text ->
@@ -184,6 +208,11 @@ class ImageTranslationFragment : Fragment() {
                 }
             )
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadLanguages()
     }
 
     override fun onDestroyView() {
