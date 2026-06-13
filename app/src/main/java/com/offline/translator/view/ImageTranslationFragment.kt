@@ -1,10 +1,8 @@
 package com.offline.translator.view
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.RectF
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -75,10 +73,6 @@ class ImageTranslationFragment : Fragment() {
             binding.selectionOverlay.visibility = 
                 if (binding.selectionOverlay.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
-        
-        binding.btnSettings.setOnClickListener {
-            startActivity(Intent(context, LanguageLibraryActivity::class.java))
-        }
     }
     
     private fun loadLanguages() {
@@ -146,7 +140,6 @@ class ImageTranslationFragment : Fragment() {
     
     private fun processImage(bitmap: Bitmap) {
         scope.launch {
-            // Check for area selection
             val rect = binding.selectionOverlay.getSelectionRect()
             val finalBitmap = if (rect.width() > 50 && rect.height() > 50) {
                 val scaleX = bitmap.width.toFloat() / binding.viewFinder.width
@@ -158,7 +151,6 @@ class ImageTranslationFragment : Fragment() {
                     (rect.height() * scaleY).toInt().coerceIn(1, bitmap.height))
             } else bitmap
             
-            // Download language if needed
             val downloadResult = translationService.downloadLanguage(selectedSource, selectedTarget)
             if (downloadResult.isFailure) {
                 binding.progressBar.visibility = View.GONE
@@ -166,7 +158,6 @@ class ImageTranslationFragment : Fragment() {
                 return@launch
             }
             
-            // OCR
             val ocrResult = textRecognitionService.recognizeText(finalBitmap)
             ocrResult.fold(
                 onSuccess = { text ->
@@ -175,7 +166,6 @@ class ImageTranslationFragment : Fragment() {
                         Toast.makeText(context, "Nenhum texto detectado", Toast.LENGTH_SHORT).show()
                         return@fold
                     }
-                    // Translate
                     val translateResult = translationService.translate(text, selectedSource, selectedTarget)
                     binding.progressBar.visibility = View.GONE
                     translateResult.fold(

@@ -85,23 +85,15 @@
             android:layout_height="48dp"
             android:src="@android:drawable/ic_menu_crop"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="32dp"/>
 
         <ImageButton
             android:id="@+id/btnCapture"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:src="@android:drawable/ic_menu_camera"
             android:scaleType="fitCenter"
             android:background="@android:color/transparent"/>
-
-        <ImageButton
-            android:id="@+id/btnSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_preferences"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:layout_marginStart="16dp"/>
     </LinearLayout>
 
     <ProgressBar
