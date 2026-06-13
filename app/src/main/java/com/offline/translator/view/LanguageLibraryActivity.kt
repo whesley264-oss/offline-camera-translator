@@ -3,7 +3,6 @@ package com.offline.translator.view
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -31,6 +30,8 @@ class LanguageLibraryActivity : AppCompatActivity() {
         translationService = TranslationService(this)
         recyclerView = findViewById(R.id.recyclerLanguages)
         progressBar = findViewById(R.id.progressBar)
+
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         loadLanguages()
@@ -116,16 +117,18 @@ class LanguageAdapter(
         val lang = languages[position]
         holder.txtName.text = lang.name
         holder.progress.visibility = if (lang.isDownloading) View.VISIBLE else View.GONE
+        holder.btnAction.visibility = if (lang.isDownloading) View.INVISIBLE else View.VISIBLE
 
         if (lang.isDownloaded) {
             holder.txtStatus.text = "Baixado"
             holder.txtStatus.setTextColor(0xFF4CAF50.toInt())
-            holder.btnAction.text = "Excluir"
-            holder.btnAction.setBackgroundColor(0xFFE53935.toInt())
+            holder.btnAction.text = "Remover"
+            holder.btnAction.setBackgroundResource(R.drawable.btn_delete)
         } else {
-            holder.txtStatus.text = ""
+            holder.txtStatus.text = "Toque para baixar"
+            holder.txtStatus.setTextColor(0xFF666666.toInt())
             holder.btnAction.text = "Baixar"
-            holder.btnAction.setBackgroundColor(0xFF2196F3.toInt())
+            holder.btnAction.setBackgroundResource(R.drawable.btn_download)
         }
 
         holder.btnAction.setOnClickListener { onItemClick(lang) }

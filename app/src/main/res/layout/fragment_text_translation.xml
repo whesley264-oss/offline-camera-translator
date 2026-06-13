@@ -3,10 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#1A1A1A">
+    android:background="#121212"
+    android:padding="16dp">
 
-    <!-- Header with Library button -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,94 +20,117 @@
             android:layout_weight="1"
             android:text="Texto → Texto"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textStyle="bold"/>
 
         <Button
             android:id="@+id/btnLibrary"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="44dp"
             android:text="Biblioteca"
-            android:textSize="12sp"
-            android:backgroundTint="#FF9800"/>
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:background="@drawable/btn_library"/>
     </LinearLayout>
 
-    <!-- Language Selection -->
-    <LinearLayout
+    <!-- Language Selection Card -->
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="#1E1E1E"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
-        <Spinner
-            android:id="@+id/spinnerSource"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="#FFFFFF"
-            android:layout_marginEnd="8dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
 
-        <ImageButton
-            android:id="@+id/btnSwap"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_rotate"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+            <Spinner
+                android:id="@+id/spinnerSource"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_bg"/>
 
-        <Spinner
-            android:id="@+id/spinnerTarget"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="#FFFFFF"
-            android:layout_marginStart="8dp"/>
-    </LinearLayout>
+            <ImageButton
+                android:id="@+id/btnSwap"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:src="@android:drawable/ic_menu_rotate"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginHorizontal="8dp"/>
 
-    <!-- Input Text -->
-    <com.google.android.material.textfield.TextInputLayout
+            <Spinner
+                android:id="@+id/spinnerTarget"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_bg"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Input Card -->
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:hint="Digite o texto para traduzir"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="#1E1E1E"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/editTextInput"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:inputType="textMultiLine"
+            android:background="@android:color/transparent"
+            android:padding="16dp"
+            android:hint="Digite o texto aqui..."
+            android:textColorHint="#666666"
+            android:textColor="#FFFFFF"
             android:gravity="top"
-            android:textColor="#000000"/>
-
-    </com.google.android.material.textfield.TextInputLayout>
+            android:inputType="textMultiLine"/>
+    </androidx.cardview.widget.CardView>
 
     <!-- Translate Button -->
     <Button
         android:id="@+id/btnTranslate"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="Traduzir"
+        android:text="TRADUZIR"
+        android:textColor="#FFFFFF"
         android:textSize="18sp"
-        android:layout_marginBottom="16dp"/>
+        android:textStyle="bold"
+        android:background="@drawable/btn_translate"
+        android:layout_marginBottom="12dp"/>
 
-    <!-- Output Text -->
-    <com.google.android.material.textfield.TextInputLayout
+    <!-- Output Card -->
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:hint="Tradução"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        app:cardBackgroundColor="#1E1E1E"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
-        <com.google.android.material.textfield.TextInputEditText
+        <EditText
             android:id="@+id/editTextOutput"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:inputType="textMultiLine"
+            android:background="@android:color/transparent"
+            android:padding="16dp"
+            android:hint="Tradução aparecerá aqui"
+            android:textColorHint="#666666"
+            android:textColor="#4CAF50"
             android:gravity="top"
-            android:textColor="#000000"/>
-
-    </com.google.android.material.textfield.TextInputLayout>
+            android:inputType="textMultiLine"/>
+    </androidx.cardview.widget.CardView>
 
 </LinearLayout>

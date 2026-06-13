@@ -68,6 +68,9 @@ dependencies {
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     
+    // CardView
+    implementation("androidx.cardview:cardview:1.0.0")
+    
     // ML Kit Translation (offline)
     implementation("com.google.mlkit:translate:17.0.2")
     
