@@ -1,164 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:orientation="vertical"
+    android:background="#1A1A1A"
+    android:padding="16dp">
 
-    <androidx.camera.view.PreviewView
-        android:id="@+id/viewFinder"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomBar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <com.offline.translator.view.SelectionOverlayView
-        android:id="@+id/selectionOverlay"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomBar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Top bar with settings -->
-    <LinearLayout
-        android:id="@+id/topBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <ImageButton
-            android:id="@+id/btnSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_preferences"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Biblioteca de Idiomas" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <ImageButton
-            android:id="@+id/btnQuality"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_manage"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Configurações de imagem" />
-
-        <ImageButton
-            android:id="@+id/btnSelectArea"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_crop"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Selecionar área" />
-    </LinearLayout>
-
-    <!-- Translation result overlay -->
+    <!-- Title -->
     <TextView
-        android:id="@+id/txtTranslationOverlay"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:background="#DD000000"
-        android:padding="16dp"
-        android:text="Tradução aparecerá aqui"
-        android:textColor="#00FF00"
-        android:textSize="18sp"
+        android:text="Tradutor"
+        android:textColor="#FFFFFF"
+        android:textSize="28sp"
         android:textStyle="bold"
-        android:gravity="center"
-        android:maxLines="5"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/topBar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp" />
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp"/>
 
-    <!-- Bottom bar with camera controls -->
-    <LinearLayout
-        android:id="@+id/bottomBar"
-        android:layout_width="0dp"
+    <!-- Mode Selector -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#CC000000"
-        android:padding="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:background="#2A2A2A"/>
 
-        <!-- Language selectors -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="16dp">
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 
-            <Spinner
-                android:id="@+id/spinnerSource"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:background="#FFFFFF"
-                android:layout_marginHorizontal="8dp" />
-
-            <ImageButton
-                android:id="@+id/btnSwapLanguages"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@android:drawable/ic_menu_rotate"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Trocar idiomas" />
-
-            <Spinner
-                android:id="@+id/spinnerTarget"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:background="#FFFFFF"
-                android:layout_marginHorizontal="8dp" />
-        </LinearLayout>
-
-        <!-- Capture button -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <ImageButton
-                android:id="@+id/btnCapture"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@android:drawable/ic_menu_camera"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:contentDescription="Tirar foto" />
-
-        </LinearLayout>
-
-        <!-- Progress indicator -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:indeterminateTint="#00FF00"
-            android:layout_gravity="center"
-            android:layout_marginTop="8dp" />
-
-    </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

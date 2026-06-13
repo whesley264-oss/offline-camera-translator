@@ -62,6 +62,9 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
     
+    // ViewPager2
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
+    
     // ML Kit Translation (offline)
     implementation("com.google.mlkit:translate:17.0.2")
     
