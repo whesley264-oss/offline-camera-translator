@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -24,6 +25,8 @@ class TextTranslationFragment : Fragment() {
     private lateinit var translationService: TranslationService
     private lateinit var statsManager: StatsManager
     private lateinit var githubSync: GitHubStatsSync
+    private lateinit var historyManager: HistoryManager
+    private lateinit var feedbackManager: FeedbackManager
     private lateinit var tts: TextToSpeechService
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
@@ -42,6 +45,8 @@ class TextTranslationFragment : Fragment() {
         translationService = TranslationService(requireContext())
         statsManager = StatsManager(requireContext())
         githubSync = GitHubStatsSync(requireContext())
+        historyManager = HistoryManager(requireContext())
+        feedbackManager = FeedbackManager(requireContext(), PreferencesManager(requireContext()))
         tts = TextToSpeechService(requireContext())
         setupUI()
         loadLanguages()
@@ -53,9 +58,11 @@ class TextTranslationFragment : Fragment() {
             selectedSource = selectedTarget
             selectedTarget = temp
             updateSpinnerSelections()
+            feedbackManager.animatePulse(it)
         }
         
         binding.btnTranslate.setOnClickListener {
+            feedbackManager.animatePulse(it)
             translateText()
         }
 
@@ -146,6 +153,7 @@ class TextTranslationFragment : Fragment() {
         val inputText = binding.editTextInput.text.toString().trim()
         if (inputText.isEmpty()) {
             Toast.makeText(context, "Digite um texto", Toast.LENGTH_SHORT).show()
+            feedbackManager.animateError(binding.editTextInput)
             return
         }
         
@@ -172,15 +180,26 @@ class TextTranslationFragment : Fragment() {
             result.fold(
                 onSuccess = { translated ->
                     binding.editTextOutput.setText(translated)
+                    feedbackManager.vibrateOnTranslate()
+                    feedbackManager.animateSuccess(binding.editTextOutput)
+                    
                     // Save to local stats
                     lastRecord = statsManager.saveTranslation(
                         inputText, translated, selectedSource, selectedTarget, TranslationType.TEXT
                     )
+                    
+                    // Save to history
+                    historyManager.saveTranslation(
+                        inputText, translated, selectedSource, selectedTarget, "text"
+                    )
+                    
                     // Show rating dialog
                     showRatingDialog()
                 },
                 onFailure = { e ->
                     Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                    feedbackManager.vibrateOnError()
+                    feedbackManager.animateError(binding.editTextOutput)
                 }
             )
         }

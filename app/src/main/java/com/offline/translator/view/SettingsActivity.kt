@@ -38,6 +38,16 @@ class SettingsActivity : AppCompatActivity() {
             )
         }
 
+        // Haptic toggle
+        binding.switchHaptic.setOnCheckedChangeListener { _, isChecked ->
+            prefs.setHaptic(isChecked)
+        }
+
+        // Animations toggle
+        binding.switchAnimations.setOnCheckedChangeListener { _, isChecked ->
+            prefs.setAnimations(isChecked)
+        }
+
         // Font size spinner
         val fontSizes = arrayOf("Pequeno", "Médio", "Grande", "Extra Grande")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fontSizes)
@@ -73,7 +83,6 @@ class SettingsActivity : AppCompatActivity() {
                 .setTitle("Limpar Cache")
                 .setMessage("Isso removerá os idiomas baixados. Você precisará baixá-los novamente.")
                 .setPositiveButton("Limpar") { _, _ ->
-                    // Clear model files
                     val modelDir = getDir("models", MODE_PRIVATE)
                     modelDir.deleteRecursively()
                     Toast.makeText(this, "Cache limpo!", Toast.LENGTH_SHORT).show()
@@ -86,6 +95,12 @@ class SettingsActivity : AppCompatActivity() {
     private fun loadSettings() {
         // Theme
         binding.switchTheme.isChecked = prefs.isDarkMode()
+        
+        // Haptic
+        binding.switchHaptic.isChecked = prefs.isHapticEnabled()
+        
+        // Animations
+        binding.switchAnimations.isChecked = prefs.isAnimationsEnabled()
 
         // Font size
         binding.spinnerFontSize.setSelection(prefs.getFontSize())

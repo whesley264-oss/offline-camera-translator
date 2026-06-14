@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.ArrayAdapter
 import android.widget.ImageButton
 import android.widget.Toast
@@ -34,6 +35,8 @@ class ImageTranslationFragment : Fragment() {
     private lateinit var textRecognitionService: TextRecognitionService
     private lateinit var statsManager: StatsManager
     private lateinit var githubSync: GitHubStatsSync
+    private lateinit var historyManager: HistoryManager
+    private lateinit var feedbackManager: FeedbackManager
     private lateinit var tts: TextToSpeechService
     private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
@@ -62,6 +65,8 @@ class ImageTranslationFragment : Fragment() {
         textRecognitionService = TextRecognitionService()
         statsManager = StatsManager(requireContext())
         githubSync = GitHubStatsSync(requireContext())
+        historyManager = HistoryManager(requireContext())
+        feedbackManager = FeedbackManager(requireContext(), PreferencesManager(requireContext()))
         tts = TextToSpeechService(requireContext())
         cameraExecutor = Executors.newSingleThreadExecutor()
         setupUI()
@@ -77,9 +82,13 @@ class ImageTranslationFragment : Fragment() {
             selectedSource = selectedTarget
             selectedTarget = temp
             updateSpinnerSelections()
+            feedbackManager.animatePulse(it)
         }
         
-        binding.btnCapture.setOnClickListener { captureAndTranslate() }
+        binding.btnCapture.setOnClickListener {
+            feedbackManager.animatePulse(it)
+            captureAndTranslate()
+        }
         
         binding.btnSelectArea.setOnClickListener {
             binding.selectionOverlay.visibility = 
@@ -246,19 +255,30 @@ class ImageTranslationFragment : Fragment() {
                             lastTranslatedText = translated
                             binding.txtResult.text = translated
                             binding.txtResult.visibility = View.VISIBLE
+                            
+                            feedbackManager.vibrateOnTranslate()
+                            feedbackManager.animateSlideUp(binding.txtResult)
+                            
                             lastRecord = statsManager.saveTranslation(
                                 text, translated, selectedSource, selectedTarget, TranslationType.IMAGE
                             )
+                            
+                            historyManager.saveTranslation(
+                                text, translated, selectedSource, selectedTarget, "image"
+                            )
+                            
                             showRatingDialog()
                         },
                         onFailure = { e ->
                             Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                            feedbackManager.vibrateOnError()
                         }
                     )
                 },
                 onFailure = { e ->
                     binding.progressBar.visibility = View.GONE
                     Toast.makeText(context, "Erro OCR: ${e.message}", Toast.LENGTH_LONG).show()
+                    feedbackManager.vibrateOnError()
                 }
             )
         }

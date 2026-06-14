@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: PreferencesManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme before super.onCreate
         prefs = PreferencesManager(this)
         AppCompatDelegate.setDefaultNightMode(
             if (prefs.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES
@@ -48,6 +47,10 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            R.id.action_history -> {
+                startActivity(Intent(this, HistoryActivity::class.java))
                 true
             }
             else -> super.onOptionsItemSelected(item)
