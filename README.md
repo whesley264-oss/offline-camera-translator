@@ -1,169 +1,121 @@
 # Offline Camera Translator 📱
 
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Android](https://img.shields.io/badge/Android-5.0%2B-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+![Build](https://img.shields.io/github/actions/workflow/status/whesley264-oss/offline-camera-translator/build_release.yml)
+[![Release](https://img.shields.io/github/v/release/whesley264-oss/offline-camera-translator?include_prereleases)](https://github.com/whesley264-oss/offline-camera-translator/releases/latest)
+
 **Tradutor offline com câmera para Android**
 
-Traduza textos de imagens usando a câmera do celular ou digitando diretamente, sem necessidade de internet após baixar os idiomas.
+Traduza textos de imagens usando a câmera do celular ou digitando diretamente, **sem necessidade de internet** após baixar os idiomas.
 
 ---
 
-## 📊 ESTATÍSTICAS DE QUALIDADE (Automático)
+## ⬇️ Download
 
-### Resultado dos Testes
+| Versão | Tipo | Download |
+|--------|------|----------|
+| **v1.0.0** | Stable | [Download APK](https://github.com/whesley264-oss/offline-camera-translator/releases/latest) |
+| Beta | Testes | [Download Beta](https://github.com/whesley264-oss/offline-camera-translator/releases) |
 
-| Métrica | Valor |
-|---------|-------|
-| **Total de Testes** | 50 |
-| **Taxa de Acerto** | 78.0% |
-| **Similaridade Média** | 85.5% |
-| **BLEU Score** | 72.3% |
-| **WER (Erro)** | 18.5% |
+### 📥 Como Instalar
 
-### Por Categoria
-
-| Categoria | Similaridade | Testes |
-|-----------|-------------|---------|
-| informal | ████████ 82.3% | 10 |
-| formal | ███████░ 75.1% | 10 |
-| technical | ██████░░ 68.5% | 10 |
-| common_phrases | █████████ 91.2% | 20 |
-
-### Por Par de Idiomas
-
-| Par | Similaridade |
-|-----|-------------|
-| en→pt | ████████░░ 78.5% |
-| pt→en | ███████░░░ 74.2% |
-
-### Conclusão
-
-- ✅ Bom! Sistema usável para produção
-- 🏆 Melhor categoria: 'common_phrases' (91.2%)
-- ⚠️ Categoria 'technical' precisa de atenção (68.5%)
-
-> ⚙️ **Automático**: Este relatório é atualizado automaticamente pelo GitHub Actions toda semana.
+1. Baixe o APK da [última release](https://github.com/whesley264-oss/offline-camera-translator/releases/latest)
+2. No celular, vá em **Configurações > Segurança**
+3. Ative **"Fontes desconhecidas"**
+4. Abra o arquivo `.apk` baixado
+5. Toque em **Instalar**
 
 ---
 
 ## 📱 Funcionalidades
 
-### Tradução de Texto
+### 🔤 Tradução de Texto
 - Digite textos para traduzir
 - Seleção de idiomas de origem e destino
-- Troca rápida de idiomas
+- Troca rápida de idiomas com um toque
 
-### Tradução de Imagem
+### 📷 Tradução de Imagem
 - Tire fotos de textos para traduzir
-- Seleção de área de tradução
-- OCR (reconhecimento óptico de caracteres)
+- Seleção de área específica
+- OCR automático com ML Kit
 
-### Biblioteca de Idiomas
+### 📚 Biblioteca de Idiomas
 - Baixe idiomas para uso offline
 - Gerencie idiomas baixados
-- Suporte a múltiplos idiomas
+- Idiomas: 🇺🇸 English ↔ 🇧🇷 Português
 
-### Estatísticas
-- Acompanhe suas traduções
-- Avalie a qualidade das traduções (1-5 estrelas)
-- Taxa de acerto do app
-- Distribuição das avaliações
+---
 
-## 📊 Sistema de Avaliação
+## 🛠️ Tecnologias
 
-Após cada tradução, você pode avaliar a qualidade:
+| Tecnologia | Uso |
+|------------|-----|
+| **Kotlin** | Linguagem principal |
+| **CameraX** | Captura de câmera |
+| **ML Kit** | Tradução offline + OCR |
+| **NDK/JNI** | Engine C nativa |
 
-| Estrelas | Avaliação | Descrição |
-|----------|----------|-----------|
-| ⭐⭐⭐⭐⭐ | Excelente | Tradução perfeita |
-| ⭐⭐⭐⭐ | Bom | Tradução quase correta |
-| ⭐⭐⭐ | Regular | Tradução aceitável |
-| ⭐⭐ | Ruim | Vários erros |
-| ⭐ | Muito ruim | Tradução incompreensível |
+---
 
-### Taxa de Acerto
+## 🔧 Como Compilar
 
-A **taxa de acerto** é calculada como:
-```
-(Excelente + Bom) / Total de Avaliações × 100
+```bash
+git clone https://github.com/whesley264-oss/offline-camera-translator.git
+cd offline-camera-translator
+./gradlew assembleDebug
 ```
 
-## 🔧 Tecnologias
+APK: `app/build/outputs/apk/debug/`
 
-- **Android CameraX** - Captura de imagem
-- **Google ML Kit** - Tradução offline e OCR
-- **Kotlin Coroutines** - Programação assíncrona
-- **ViewBinding** - Ligação de views
-- **Material Design** - Interface moderna
+---
 
-## 📦 Estrutura do Projeto
+## 📄 Estrutura
 
 ```
 app/src/main/
 ├── java/com/offline/translator/
-│   ├── model/
-│   │   ├── Language.kt         # Modelo de idioma
-│   │   ├── TranslationService.kt
-│   │   ├── TextRecognitionService.kt
-│   │   ├── StatsManager.kt     # Gerenciamento de estatísticas
-│   │   └── TranslationStats.kt
-│   ├── view/
-│   │   ├── MainActivity.kt
-│   │   ├── TextTranslationFragment.kt
-│   │   ├── ImageTranslationFragment.kt
-│   │   ├── LanguageLibraryActivity.kt
-│   │   └── StatsActivity.kt
-│   └── ...
-└── res/
-    ├── layout/
-    ├── drawable/
-    └── values/
+│   ├── model/          # Lógica de negócio
+│   ├── view/           # UI (Activities/Fragments)
+│   └── presenter/      # Apresentação
+├── res/                # Layouts, drawables, valores
+└── cpp/                # Engine C nativa
 ```
-
-## 🚀 Como Usar
-
-### 1. Baixar Idiomas
-1. Abra o app
-2. Toque em "Biblioteca"
-3. Baixe os idiomas desejados (ex: English + Português)
-
-### 2. Traduzir Texto
-1. Vá para aba "Texto"
-2. Selecione os idiomas
-3. Digite o texto
-4. Toque em "TRADUZIR"
-5. Avalie a tradução (opcional)
-
-### 3. Traduzir Imagem
-1. Vá para aba "Imagem"
-2. Aponte a câmera para o texto
-3. Toque no botão de captura
-4. Veja a tradução
-5. Avalie a tradução (opcional)
-
-### 4. Ver Estatísticas
-1. Toque no ícone de gráficos no menu
-2. Veja sua taxa de acerto
-3. Distribuição das avaliações
-4. Total de traduções por tipo
-
-## 📈 Dados Coletados
-
-O app coleta localmente:
-- Total de traduções (texto/imagem)
-- Avaliações de qualidade (1-5 estrelas)
-- Idiomas utilizados
-- Data/hora das traduções
-
-**Privacidade:** Todos os dados são armazenados apenas no seu dispositivo.
-
-## 🎯 Versão Mínima
-
-- **Min SDK:** 21 (Android 5.0)
-- **Target SDK:** 34 (Android 14)
-
-## 📄 Licença
-
-MIT License
 
 ---
 
-Desenvolvido com ❤️ usando Google ML Kit
+## 🤝 Contribuir
+
+Veja [CONTRIBUTING.md](CONTRIBUTING.md) para guidelines.
+
+---
+
+## 📝 Changelog
+
+Veja [CHANGELOG.md](CHANGELOG.md) para histórico.
+
+---
+
+## ❓ FAQ
+
+**P: Funciona offline?**
+R: Sim! Após baixar os idiomas.
+
+**P: Quanto espaço?**
+R: ~100MB por par de idiomas.
+
+**P: Idiomas?**
+R: English ↔ Português.
+
+---
+
+## 📜 Licença
+
+MIT License - veja [LICENSE](LICENSE)
+
+---
+
+<p align="center">
+  Feito com ❤️ para traduções offline
+</p>
