@@ -1,0 +1,14 @@
+{
+  "name": "Translation Quality Analysis",
+  "version": "1.0.0",
+  "description": "Analysis tools for offline camera translator quality metrics",
+  "dependencies": {
+    "pandas": ">=1.5.0",
+    "numpy": ">=1.23.0",
+    "matplotlib": ">=3.6.0",
+    "seaborn": ">=0.12.0",
+    "plotly": ">=5.10.0",
+    "scikit-learn": ">=1.1.0",
+    "jupyter": ">=1.0.0"
+  }
+}

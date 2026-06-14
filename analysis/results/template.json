@@ -1,0 +1,22 @@
+{
+  "generated_at": null,
+  "version": "1.0",
+  "total_samples": 50,
+  "exact_match_rate": 0.0,
+  "avg_similarity": 0.0,
+  "avg_bleu": 0.0,
+  "avg_wer": 0.0,
+  "avg_cer": 0.0,
+  "sample_predictions": [],
+  "errors_by_category": {
+    "informal": 0,
+    "formal": 0,
+    "technical": 0,
+    "common_phrases": 0
+  },
+  "errors_by_language_pair": {
+    "en-pt": 0,
+    "pt-en": 0
+  },
+  "recommendations": []
+}

@@ -1,0 +1,409 @@
+{
+  "dataset_name": "Translation Test Dataset v1.0",
+  "description": "Ground truth dataset for evaluating translation quality",
+  "language_pairs": ["en-pt", "pt-en"],
+  "total_samples": 50,
+  "categories": ["informal", "formal", "technical", "common_phrases"],
+  "samples": [
+    {
+      "id": 1,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Hello, how are you?",
+      "expected_translation": "Olá, como você está?",
+      "category": "common_phrases"
+    },
+    {
+      "id": 2,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Good morning!",
+      "expected_translation": "Bom dia!",
+      "category": "common_phrases"
+    },
+    {
+      "id": "3",
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Thank you very much",
+      "expected_translation": "Muito obrigado",
+      "category": "common_phrases"
+    },
+    {
+      "id": 4,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "I love programming",
+      "expected_translation": "Eu amo programar",
+      "category": "informal"
+    },
+    {
+      "id": 5,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Where is the bathroom?",
+      "expected_translation": "Onde fica o banheiro?",
+      "category": "common_phrases"
+    },
+    {
+      "id": 6,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "The weather is nice today",
+      "expected_translation": "O clima está agradável hoje",
+      "category": "informal"
+    },
+    {
+      "id": 7,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "What time is it?",
+      "expected_translation": "Que horas são?",
+      "category": "common_phrases"
+    },
+    {
+      "id": 8,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "I need help",
+      "expected_translation": "Preciso de ajuda",
+      "category": "informal"
+    },
+    {
+      "id": 9,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "The document was signed",
+      "expected_translation": "O documento foi assinado",
+      "category": "formal"
+    },
+    {
+      "id": 10,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Please submit your application",
+      "expected_translation": "Por favor, envie sua candidatura",
+      "category": "formal"
+    },
+    {
+      "id": 11,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "The system requires authentication",
+      "expected_translation": "O sistema requer autenticação",
+      "category": "technical"
+    },
+    {
+      "id": 12,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Database connection established",
+      "expected_translation": "Conexão com banco de dados estabelecida",
+      "category": "technical"
+    },
+    {
+      "id": 13,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Good night, see you tomorrow",
+      "expected_translation": "Boa noite, até amanhã",
+      "category": "common_phrases"
+    },
+    {
+      "id": 14,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "How much does it cost?",
+      "expected_translation": "Quanto custa?",
+      "category": "common_phrases"
+    },
+    {
+      "id": 15,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "I am learning Python",
+      "expected_translation": "Estou aprendendo Python",
+      "category": "informal"
+    },
+    {
+      "id": 16,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "The meeting starts at 3 PM",
+      "expected_translation": "A reunião começa às 15h",
+      "category": "formal"
+    },
+    {
+      "id": 17,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Error 404: Page not found",
+      "expected_translation": "Erro 404: Página não encontrada",
+      "category": "technical"
+    },
+    {
+      "id": 18,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Please wait a moment",
+      "expected_translation": "Por favor, aguarde um momento",
+      "category": "formal"
+    },
+    {
+      "id": 19,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "My name is John",
+      "expected_translation": "Meu nome é João",
+      "category": "informal"
+    },
+    {
+      "id": 20,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "The file has been uploaded",
+      "expected_translation": "O arquivo foi enviado",
+      "category": "technical"
+    },
+    {
+      "id": 21,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Olá, tudo bem?",
+      "expected_translation": "Hello, how are you?",
+      "category": "common_phrases"
+    },
+    {
+      "id": 22,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Bom dia",
+      "expected_translation": "Good morning",
+      "category": "common_phrases"
+    },
+    {
+      "id": 23,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Muito obrigado",
+      "expected_translation": "Thank you very much",
+      "category": "common_phrases"
+    },
+    {
+      "id": 24,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Preciso de ajuda",
+      "expected_translation": "I need help",
+      "category": "informal"
+    },
+    {
+      "id": 25,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Onde fica o banheiro?",
+      "expected_translation": "Where is the bathroom?",
+      "category": "common_phrases"
+    },
+    {
+      "id": 26,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "O clima está agradável hoje",
+      "expected_translation": "The weather is nice today",
+      "category": "informal"
+    },
+    {
+      "id": 27,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Que horas são?",
+      "expected_translation": "What time is it?",
+      "category": "common_phrases"
+    },
+    {
+      "id": 28,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Estou aprendendo programação",
+      "expected_translation": "I am learning programming",
+      "category": "informal"
+    },
+    {
+      "id": 29,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "A reunião começa às três da tarde",
+      "expected_translation": "The meeting starts at three in the afternoon",
+      "category": "formal"
+    },
+    {
+      "id": 30,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Conexão estabelecida com o servidor",
+      "expected_translation": "Connection established with the server",
+      "category": "technical"
+    },
+    {
+      "id": 31,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "I would like to make a reservation",
+      "expected_translation": "Gostaria de fazer uma reserva",
+      "category": "formal"
+    },
+    {
+      "id": 32,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Can you help me?",
+      "expected_translation": "Você pode me ajudar?",
+      "category": "informal"
+    },
+    {
+      "id": 33,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "The download is complete",
+      "expected_translation": "O download está completo",
+      "category": "technical"
+    },
+    {
+      "id": 34,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Have a nice day",
+      "expected_translation": "Tenha um bom dia",
+      "category": "common_phrases"
+    },
+    {
+      "id": 35,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "I don't understand",
+      "expected_translation": "Eu não entendo",
+      "category": "informal"
+    },
+    {
+      "id": 36,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Não entendi",
+      "expected_translation": "I don't understand",
+      "category": "informal"
+    },
+    {
+      "id": 37,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Tenha um bom dia",
+      "expected_translation": "Have a nice day",
+      "category": "common_phrases"
+    },
+    {
+      "id": 38,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "O download está completo",
+      "expected_translation": "The download is complete",
+      "category": "technical"
+    },
+    {
+      "id": 39,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Você pode me ajudar?",
+      "expected_translation": "Can you help me?",
+      "category": "informal"
+    },
+    {
+      "id": 40,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Gostaria de fazer uma reserva",
+      "expected_translation": "I would like to make a reservation",
+      "category": "formal"
+    },
+    {
+      "id": 41,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "The application was rejected",
+      "expected_translation": "A candidatura foi rejeitada",
+      "category": "formal"
+    },
+    {
+      "id": 42,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Memory allocation failed",
+      "expected_translation": "Falha na alocação de memória",
+      "category": "technical"
+    },
+    {
+      "id": 43,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "See you later",
+      "expected_translation": "Até mais",
+      "category": "common_phrases"
+    },
+    {
+      "id": 44,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "I'm going to the store",
+      "expected_translation": "Vou à loja",
+      "category": "informal"
+    },
+    {
+      "id": 45,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Até mais",
+      "expected_translation": "See you later",
+      "category": "common_phrases"
+    },
+    {
+      "id": 46,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Vou à loja",
+      "expected_translation": "I'm going to the store",
+      "category": "informal"
+    },
+    {
+      "id": 47,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Falha na alocação de memória",
+      "expected_translation": "Memory allocation failed",
+      "category": "technical"
+    },
+    {
+      "id": 48,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "A candidatura foi rejeitada",
+      "expected_translation": "The application was rejected",
+      "category": "formal"
+    },
+    {
+      "id": 49,
+      "source_lang": "en",
+      "target_lang": "pt",
+      "source_text": "Welcome to our application",
+      "expected_translation": "Bem-vindo à nossa aplicação",
+      "category": "formal"
+    },
+    {
+      "id": 50,
+      "source_lang": "pt",
+      "target_lang": "en",
+      "source_text": "Bem-vindo à nossa aplicação",
+      "expected_translation": "Welcome to our application",
+      "category": "formal"
+    }
+  ]
+}
