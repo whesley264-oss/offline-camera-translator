@@ -130,22 +130,45 @@
                 android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 android:padding="16dp"
-                android:paddingEnd="56dp"
+                android:paddingEnd="140dp"
                 android:hint="Tradução aparecerá aqui"
                 android:textColorHint="#666666"
                 android:textColor="#4CAF50"
                 android:gravity="top"
                 android:inputType="textMultiLine"/>
 
-            <ImageButton
-                android:id="@+id/btnCopy"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="top|end"
-                android:layout_margin="8dp"
-                android:src="@android:drawable/ic_menu_share"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Copiar"/>
+                android:orientation="horizontal"
+                android:padding="8dp">
+
+                <ImageButton
+                    android:id="@+id/btnSpeak"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_btn_speak_now"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Ouvir"/>
+
+                <ImageButton
+                    android:id="@+id/btnShare"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_menu_share"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Compartilhar"/>
+
+                <ImageButton
+                    android:id="@+id/btnCopy"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_menu_save"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Copiar"/>
+            </LinearLayout>
         </FrameLayout>
     </androidx.cardview.widget.CardView>
 

@@ -1,6 +1,9 @@
 package com.offline.translator.view
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -31,6 +34,7 @@ class ImageTranslationFragment : Fragment() {
     private lateinit var textRecognitionService: TextRecognitionService
     private lateinit var statsManager: StatsManager
     private lateinit var githubSync: GitHubStatsSync
+    private lateinit var tts: TextToSpeechService
     private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
     
@@ -40,6 +44,8 @@ class ImageTranslationFragment : Fragment() {
     private var selectedSource = "en"
     private var selectedTarget = "pt"
     private var lastRecord: TranslationRecord? = null
+    private var lastDetectedText: String = ""
+    private var lastTranslatedText: String = ""
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else Toast.makeText(context, "Permissão de câmera negada", Toast.LENGTH_SHORT).show()
@@ -56,8 +62,7 @@ class ImageTranslationFragment : Fragment() {
         textRecognitionService = TextRecognitionService()
         statsManager = StatsManager(requireContext())
         githubSync = GitHubStatsSync(requireContext())
-        // Configure seu token do GitHub aqui ou via Settings
-        // githubSync.setToken("seu_token_aqui")
+        tts = TextToSpeechService(requireContext())
         cameraExecutor = Executors.newSingleThreadExecutor()
         setupUI()
         loadLanguages()
@@ -83,6 +88,43 @@ class ImageTranslationFragment : Fragment() {
 
         binding.btnLibrary.setOnClickListener {
             startActivity(Intent(requireContext(), LanguageLibraryActivity::class.java))
+        }
+        
+        binding.btnCopy.setOnClickListener {
+            if (lastTranslatedText.isNotBlank()) copyToClipboard(lastTranslatedText)
+        }
+        
+        binding.btnShare.setOnClickListener {
+            if (lastTranslatedText.isNotBlank()) shareText(lastTranslatedText)
+        }
+        
+        binding.btnSpeak.setOnClickListener {
+            if (lastTranslatedText.isNotBlank()) speakText(lastTranslatedText)
+        }
+    }
+    
+    private fun copyToClipboard(text: String) {
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("Tradução", text)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(context, "✓ Copiado!", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun shareText(text: String) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+            putExtra(Intent.EXTRA_SUBJECT, "Tradução")
+        }
+        startActivity(Intent.createChooser(shareIntent, "Compartilhar via"))
+    }
+    
+    private fun speakText(text: String) {
+        if (tts.isAvailable()) {
+            tts.speakTranslation(text, selectedTarget)
+            Toast.makeText(context, "🔊 Reproduzindo...", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "TTS não disponível", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -196,13 +238,14 @@ class ImageTranslationFragment : Fragment() {
                         Toast.makeText(context, "Nenhum texto detectado", Toast.LENGTH_SHORT).show()
                         return@fold
                     }
+                    lastDetectedText = text
                     val translateResult = translationService.translate(text, selectedSource, selectedTarget)
                     binding.progressBar.visibility = View.GONE
                     translateResult.fold(
                         onSuccess = { translated ->
+                            lastTranslatedText = translated
                             binding.txtResult.text = translated
                             binding.txtResult.visibility = View.VISIBLE
-                            // Save to local stats
                             lastRecord = statsManager.saveTranslation(
                                 text, translated, selectedSource, selectedTarget, TranslationType.IMAGE
                             )

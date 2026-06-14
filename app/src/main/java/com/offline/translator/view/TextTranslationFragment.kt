@@ -24,6 +24,7 @@ class TextTranslationFragment : Fragment() {
     private lateinit var translationService: TranslationService
     private lateinit var statsManager: StatsManager
     private lateinit var githubSync: GitHubStatsSync
+    private lateinit var tts: TextToSpeechService
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
     private var downloadedLanguages: List<Language> = emptyList()
@@ -41,6 +42,7 @@ class TextTranslationFragment : Fragment() {
         translationService = TranslationService(requireContext())
         statsManager = StatsManager(requireContext())
         githubSync = GitHubStatsSync(requireContext())
+        tts = TextToSpeechService(requireContext())
         setupUI()
         loadLanguages()
     }
@@ -63,9 +65,17 @@ class TextTranslationFragment : Fragment() {
         
         binding.btnCopy.setOnClickListener {
             val text = binding.editTextOutput.text.toString()
-            if (text.isNotBlank()) {
-                copyToClipboard(text)
-            }
+            if (text.isNotBlank()) copyToClipboard(text)
+        }
+        
+        binding.btnShare.setOnClickListener {
+            val text = binding.editTextOutput.text.toString()
+            if (text.isNotBlank()) shareText(text)
+        }
+        
+        binding.btnSpeak.setOnClickListener {
+            val text = binding.editTextOutput.text.toString()
+            if (text.isNotBlank()) speakText(text)
         }
     }
     
@@ -74,9 +84,25 @@ class TextTranslationFragment : Fragment() {
         val clip = ClipData.newPlainText("Tradução", text)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(context, "✓ Copiado!", Toast.LENGTH_SHORT).show()
-        
-        // Update widget
         TranslationWidgetProvider.updateLastTranslation(requireContext(), text)
+    }
+    
+    private fun shareText(text: String) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+            putExtra(Intent.EXTRA_SUBJECT, "Tradução")
+        }
+        startActivity(Intent.createChooser(shareIntent, "Compartilhar via"))
+    }
+    
+    private fun speakText(text: String) {
+        if (tts.isAvailable()) {
+            tts.speakTranslation(text, selectedTarget)
+            Toast.makeText(context, "🔊 Reproduzindo...", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "TTS não disponível", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun loadLanguages() {
