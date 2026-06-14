@@ -87,12 +87,12 @@ class TextRecognitionService {
     private fun cleanRecognizedText(text: String): String {
         return text
             .trim()
-            .replaceAll("\\s+".toRegex(), " ") // Multiple spaces to single
-            .replaceAll("_[a-zA-Z]".toRegex()) { match -> 
+            .replace(Regex("\\s+"), " ") // Multiple spaces to single
+            .replace(Regex("_[a-zA-Z]")) { match -> 
                 match.value.first().lowercaseChar().toString() 
             } // Fix underscore artifacts
-            .replaceAll("[^\\p{L}\\p{N}\\s.,!?;:'\"-]".toRegex(), "") // Remove weird chars
-            .replaceAll("\\n{3,}".toRegex(), "\n\n") // Too many newlines
+            .replace(Regex("[^\\p{L}\\p{N}\\s.,!?;:'\"]"), "") // Remove weird chars
+            .replace(Regex("\\n{3,}"), "\n\n") // Too many newlines
             .trim()
     }
     

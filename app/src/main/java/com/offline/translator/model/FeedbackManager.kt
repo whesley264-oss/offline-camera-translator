@@ -63,7 +63,7 @@ class FeedbackManager(private val context: Context, private val prefs: Preferenc
         
         val pulse = ScaleAnimation(
             1f, 1.1f, 1f, 1.1f,
-            View.FAKE_BOUNDS_FOR_PIVOT[0], View.FAKE_BOUNDS_FOR_PIVOT[1]
+            view.width / 2f, view.height / 2f
         ).apply {
             duration = 100
             interpolator = OvershootInterpolator()
@@ -81,7 +81,7 @@ class FeedbackManager(private val context: Context, private val prefs: Preferenc
         
         val bounce = ScaleAnimation(
             1f, 0.9f, 1f, 0.9f,
-            View.FAKE_BOUNDS_FOR_PIVOT[0], View.FAKE_BOUNDS_FOR_PIVOT[1]
+            view.width / 2f, view.height / 2f
         ).apply {
             duration = 150
             interpolator = OvershootInterpolator(2f)

@@ -46,7 +46,6 @@ class ImageTranslationFragment : Fragment() {
     private var downloadedLanguages: List<Language> = emptyList()
     private var selectedSource = "en"
     private var selectedTarget = "pt"
-    private var lastRecord: TranslationRecord? = null
     private var lastDetectedText: String = ""
     private var lastTranslatedText: String = ""
 
@@ -259,7 +258,7 @@ class ImageTranslationFragment : Fragment() {
                             feedbackManager.vibrateOnTranslate()
                             feedbackManager.animateSlideUp(binding.txtResult)
                             
-                            lastRecord = statsManager.saveTranslation(
+                            val recordId = statsManager.saveTranslation(
                                 text, translated, selectedSource, selectedTarget, TranslationType.IMAGE
                             )
                             
@@ -267,7 +266,7 @@ class ImageTranslationFragment : Fragment() {
                                 text, translated, selectedSource, selectedTarget, "image"
                             )
                             
-                            showRatingDialog()
+                            showRatingDialog(recordId)
                         },
                         onFailure = { e ->
                             Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
@@ -284,7 +283,7 @@ class ImageTranslationFragment : Fragment() {
         }
     }
     
-    private fun showRatingDialog() {
+    private fun showRatingDialog(recordId) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
         val dialog = android.app.AlertDialog.Builder(context)
             .setView(dialogView)
@@ -319,7 +318,7 @@ class ImageTranslationFragment : Fragment() {
         stars.forEachIndexed { index, star ->
             star.setOnClickListener {
                 updateStars(index + 1)
-                if (currentRating > 0 && lastRecord != null) {
+                if (currentRating > 0) {
                     val rating = when (currentRating) {
                         5 -> TranslationRating.EXCELLENT
                         4 -> TranslationRating.GOOD
@@ -327,11 +326,8 @@ class ImageTranslationFragment : Fragment() {
                         2 -> TranslationRating.POOR
                         else -> TranslationRating.BAD
                     }
-                    statsManager.rateTranslation(lastRecord!!.id, rating)
+                    statsManager.rateTranslation(recordId, rating)
                     
-                    // Add to GitHub sync queue
-                    val updatedRecord = lastRecord!!.copy(rating = rating)
-                    githubSync.addPendingSync(updatedRecord)
                     
                     // Try to sync with GitHub
                     syncWithGitHub()

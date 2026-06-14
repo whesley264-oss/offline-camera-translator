@@ -33,7 +33,6 @@ class TextTranslationFragment : Fragment() {
     private var downloadedLanguages: List<Language> = emptyList()
     private var selectedSource = "en"
     private var selectedTarget = "pt"
-    private var lastRecord: TranslationRecord? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTextTranslationBinding.inflate(inflater, container, false)
@@ -184,7 +183,7 @@ class TextTranslationFragment : Fragment() {
                     feedbackManager.animateSuccess(binding.editTextOutput)
                     
                     // Save to local stats
-                    lastRecord = statsManager.saveTranslation(
+                    val recordId = statsManager.saveTranslation(
                         inputText, translated, selectedSource, selectedTarget, TranslationType.TEXT
                     )
                     
@@ -194,7 +193,7 @@ class TextTranslationFragment : Fragment() {
                     )
                     
                     // Show rating dialog
-                    showRatingDialog()
+                    showRatingDialog(recordId)
                 },
                 onFailure = { e ->
                     Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
@@ -205,7 +204,7 @@ class TextTranslationFragment : Fragment() {
         }
     }
     
-    private fun showRatingDialog() {
+    private fun showRatingDialog(recordId: Long) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
         val dialog = android.app.AlertDialog.Builder(context)
             .setView(dialogView)
@@ -240,7 +239,7 @@ class TextTranslationFragment : Fragment() {
         stars.forEachIndexed { index, star ->
             star.setOnClickListener {
                 updateStars(index + 1)
-                if (currentRating > 0 && lastRecord != null) {
+                if (currentRating > 0) {
                     val rating = when (currentRating) {
                         5 -> TranslationRating.EXCELLENT
                         4 -> TranslationRating.GOOD
@@ -248,11 +247,8 @@ class TextTranslationFragment : Fragment() {
                         2 -> TranslationRating.POOR
                         else -> TranslationRating.BAD
                     }
-                    statsManager.rateTranslation(lastRecord!!.id, rating)
+                    statsManager.rateTranslation(recordId, rating)
                     
-                    // Add to GitHub sync queue
-                    val updatedRecord = lastRecord!!.copy(rating = rating)
-                    githubSync.addPendingSync(updatedRecord)
                     
                     // Try to sync with GitHub
                     syncWithGitHub()
