@@ -1,8 +1,39 @@
-# Offline Camera Translator
+# Offline Camera Translator 📱
 
 **Tradutor offline com câmera para Android**
 
 Traduza textos de imagens usando a câmera do celular ou digitando diretamente, sem necessidade de internet após baixar os idiomas.
+
+---
+
+## 📊 ESTATÍSTICAS DE QUALIDADE
+
+### Resultados da Comunidade
+
+| Métrica | Valor |
+|---------|-------|
+| **Total de Traduções** | 0 |
+| **Total Avaliadas** | 0 |
+| **Taxa de Acerto** | 0.0% |
+| **Nota Média** | 0.00 / 5.0 |
+
+### Distribuição de Avaliações
+
+| Estrelas | Quantidade | Descrição |
+|----------|------------|-----------|
+| ⭐⭐⭐⭐⭐ Excelente | 0 | Tradução perfeita |
+| ⭐⭐⭐⭐ Bom | 0 | Tradução quase correta |
+| ⭐⭐⭐ Regular | 0 | Tradução aceitável |
+| ⭐⭐ Ruim | 0 | Vários erros |
+| ⭐ Muito ruim | 0 | Tradução incompreensível |
+
+### Por Tipo de Tradução
+- 📝 **Texto:** 0 traduções
+- 📷 **Imagem:** 0 traduções
+
+> Dados atualizados automaticamente com as avaliações da comunidade.
+
+---
 
 ## 📱 Funcionalidades
 

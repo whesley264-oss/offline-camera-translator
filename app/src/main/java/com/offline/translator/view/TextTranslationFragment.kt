@@ -11,11 +11,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.offline.translator.R
 import com.offline.translator.databinding.FragmentTextTranslationBinding
-import com.offline.translator.model.Language
-import com.offline.translator.model.StatsManager
-import com.offline.translator.model.TranslationRating
-import com.offline.translator.model.TranslationType
-import com.offline.translator.model.TranslationService
+import com.offline.translator.model.*
 import kotlinx.coroutines.*
 
 class TextTranslationFragment : Fragment() {
@@ -24,12 +20,13 @@ class TextTranslationFragment : Fragment() {
     
     private lateinit var translationService: TranslationService
     private lateinit var statsManager: StatsManager
+    private lateinit var githubSync: GitHubStatsSync
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
     private var downloadedLanguages: List<Language> = emptyList()
     private var selectedSource = "en"
     private var selectedTarget = "pt"
-    private var lastRecordId: Long = -1
+    private var lastRecord: TranslationRecord? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTextTranslationBinding.inflate(inflater, container, false)
@@ -40,6 +37,9 @@ class TextTranslationFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         translationService = TranslationService(requireContext())
         statsManager = StatsManager(requireContext())
+        githubSync = GitHubStatsSync(requireContext())
+        // Configure seu token do GitHub aqui ou via Settings
+        // githubSync.setToken("seu_token_aqui")
         setupUI()
         loadLanguages()
     }
@@ -128,8 +128,8 @@ class TextTranslationFragment : Fragment() {
             result.fold(
                 onSuccess = { translated ->
                     binding.editTextOutput.setText(translated)
-                    // Save to stats
-                    lastRecordId = statsManager.saveTranslation(
+                    // Save to local stats
+                    lastRecord = statsManager.saveTranslation(
                         inputText, translated, selectedSource, selectedTarget, TranslationType.TEXT
                     )
                     // Show rating dialog
@@ -177,7 +177,7 @@ class TextTranslationFragment : Fragment() {
         stars.forEachIndexed { index, star ->
             star.setOnClickListener {
                 updateStars(index + 1)
-                if (currentRating > 0 && lastRecordId > 0) {
+                if (currentRating > 0 && lastRecord != null) {
                     val rating = when (currentRating) {
                         5 -> TranslationRating.EXCELLENT
                         4 -> TranslationRating.GOOD
@@ -185,7 +185,14 @@ class TextTranslationFragment : Fragment() {
                         2 -> TranslationRating.POOR
                         else -> TranslationRating.BAD
                     }
-                    statsManager.rateTranslation(lastRecordId, rating)
+                    statsManager.rateTranslation(lastRecord!!.id, rating)
+                    
+                    // Add to GitHub sync queue
+                    val updatedRecord = lastRecord!!.copy(rating = rating)
+                    githubSync.addPendingSync(updatedRecord)
+                    
+                    // Try to sync with GitHub
+                    syncWithGitHub()
                 }
                 dialog.dismiss()
             }
@@ -196,6 +203,19 @@ class TextTranslationFragment : Fragment() {
         }
 
         dialog.show()
+    }
+    
+    private fun syncWithGitHub() {
+        scope.launch {
+            val pending = githubSync.getPendingCount()
+            if (pending > 0) {
+                val result = githubSync.syncWithGitHub()
+                result.onSuccess {
+                    Toast.makeText(context, "✓ Estatísticas sincronizadas!", Toast.LENGTH_SHORT).show()
+                }
+                // Se falhar, os dados ficam na fila para próxima tentativa
+            }
+        }
     }
 
     override fun onResume() {

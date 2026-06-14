@@ -18,12 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.offline.translator.R
 import com.offline.translator.databinding.FragmentImageTranslationBinding
-import com.offline.translator.model.Language
-import com.offline.translator.model.StatsManager
-import com.offline.translator.model.TextRecognitionService
-import com.offline.translator.model.TranslationRating
-import com.offline.translator.model.TranslationService
-import com.offline.translator.model.TranslationType
+import com.offline.translator.model.*
 import kotlinx.coroutines.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -35,6 +30,7 @@ class ImageTranslationFragment : Fragment() {
     private lateinit var translationService: TranslationService
     private lateinit var textRecognitionService: TextRecognitionService
     private lateinit var statsManager: StatsManager
+    private lateinit var githubSync: GitHubStatsSync
     private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
     
@@ -43,7 +39,7 @@ class ImageTranslationFragment : Fragment() {
     private var downloadedLanguages: List<Language> = emptyList()
     private var selectedSource = "en"
     private var selectedTarget = "pt"
-    private var lastRecordId: Long = -1
+    private var lastRecord: TranslationRecord? = null
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else Toast.makeText(context, "Permissão de câmera negada", Toast.LENGTH_SHORT).show()
@@ -59,6 +55,9 @@ class ImageTranslationFragment : Fragment() {
         translationService = TranslationService(requireContext())
         textRecognitionService = TextRecognitionService()
         statsManager = StatsManager(requireContext())
+        githubSync = GitHubStatsSync(requireContext())
+        // Configure seu token do GitHub aqui ou via Settings
+        // githubSync.setToken("seu_token_aqui")
         cameraExecutor = Executors.newSingleThreadExecutor()
         setupUI()
         loadLanguages()
@@ -203,8 +202,8 @@ class ImageTranslationFragment : Fragment() {
                         onSuccess = { translated ->
                             binding.txtResult.text = translated
                             binding.txtResult.visibility = View.VISIBLE
-                            // Save to stats
-                            lastRecordId = statsManager.saveTranslation(
+                            // Save to local stats
+                            lastRecord = statsManager.saveTranslation(
                                 text, translated, selectedSource, selectedTarget, TranslationType.IMAGE
                             )
                             showRatingDialog()
@@ -257,7 +256,7 @@ class ImageTranslationFragment : Fragment() {
         stars.forEachIndexed { index, star ->
             star.setOnClickListener {
                 updateStars(index + 1)
-                if (currentRating > 0 && lastRecordId > 0) {
+                if (currentRating > 0 && lastRecord != null) {
                     val rating = when (currentRating) {
                         5 -> TranslationRating.EXCELLENT
                         4 -> TranslationRating.GOOD
@@ -265,7 +264,14 @@ class ImageTranslationFragment : Fragment() {
                         2 -> TranslationRating.POOR
                         else -> TranslationRating.BAD
                     }
-                    statsManager.rateTranslation(lastRecordId, rating)
+                    statsManager.rateTranslation(lastRecord!!.id, rating)
+                    
+                    // Add to GitHub sync queue
+                    val updatedRecord = lastRecord!!.copy(rating = rating)
+                    githubSync.addPendingSync(updatedRecord)
+                    
+                    // Try to sync with GitHub
+                    syncWithGitHub()
                 }
                 dialog.dismiss()
             }
@@ -276,6 +282,18 @@ class ImageTranslationFragment : Fragment() {
         }
 
         dialog.show()
+    }
+    
+    private fun syncWithGitHub() {
+        scope.launch {
+            val pending = githubSync.getPendingCount()
+            if (pending > 0) {
+                val result = githubSync.syncWithGitHub()
+                result.onSuccess {
+                    Toast.makeText(context, "✓ Estatísticas sincronizadas!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     override fun onResume() {
