@@ -15,4 +15,14 @@
     <string name="cancel">Cancel</string>
     <string name="download_success">%s downloaded successfully!</string>
     <string name="download_error">Error downloading %s: %s</string>
+    
+    <!-- Widget -->
+    <string name="widget_description">Widget de tradução rápida</string>
+    <string name="widget_name">Tradutor</string>
+    <string name="open_app">Abrir App</string>
+    
+    <!-- Copy -->
+    <string name="copy">Copiar</string>
+    <string name="copied">Copiado!</string>
+    <string name="translation_copied">Tradução copiada</string>
 </resources>

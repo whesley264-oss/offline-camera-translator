@@ -12,6 +12,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         tools:targetApi="34">
+        
         <activity
             android:name=".view.MainActivity"
             android:exported="true"
@@ -21,11 +22,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
         <activity
             android:name=".view.LanguageLibraryActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:parentActivityName=".view.MainActivity" />
+        
+        <activity
+            android:name=".view.SettingsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".view.MainActivity" />
+
+        <!-- Translation Widget Provider -->
+        <receiver 
+            android:name=".widget.TranslationWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/translation_widget_info" />
+        </receiver>
     </application>
 
 </manifest>
