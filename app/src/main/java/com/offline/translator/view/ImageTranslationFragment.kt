@@ -283,7 +283,7 @@ class ImageTranslationFragment : Fragment() {
         }
     }
     
-    private fun showRatingDialog(recordId) {
+    private fun showRatingDialog(recordId: Long) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
         val dialog = android.app.AlertDialog.Builder(context)
             .setView(dialogView)
