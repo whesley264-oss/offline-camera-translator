@@ -6,11 +6,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Button
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.offline.translator.R
 import com.offline.translator.databinding.FragmentTextTranslationBinding
 import com.offline.translator.model.Language
+import com.offline.translator.model.StatsManager
+import com.offline.translator.model.TranslationRating
+import com.offline.translator.model.TranslationType
 import com.offline.translator.model.TranslationService
 import kotlinx.coroutines.*
 
@@ -19,11 +23,13 @@ class TextTranslationFragment : Fragment() {
     private val binding get() = _binding!!
     
     private lateinit var translationService: TranslationService
+    private lateinit var statsManager: StatsManager
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
     private var downloadedLanguages: List<Language> = emptyList()
     private var selectedSource = "en"
     private var selectedTarget = "pt"
+    private var lastRecordId: Long = -1
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTextTranslationBinding.inflate(inflater, container, false)
@@ -33,6 +39,7 @@ class TextTranslationFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         translationService = TranslationService(requireContext())
+        statsManager = StatsManager(requireContext())
         setupUI()
         loadLanguages()
     }
@@ -75,7 +82,6 @@ class TextTranslationFragment : Fragment() {
             targetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerTarget.adapter = targetAdapter
             
-            // Default: English -> Portuguese
             val sourceIndex = downloadedLanguages.indexOfFirst { it.code == "en" }
             val targetIndex = downloadedLanguages.indexOfFirst { it.code == "pt" }
             if (sourceIndex >= 0) binding.spinnerSource.setSelection(sourceIndex)
@@ -104,7 +110,6 @@ class TextTranslationFragment : Fragment() {
             return
         }
         
-        // Update selections from spinners
         val sourcePos = binding.spinnerSource.selectedItemPosition
         val targetPos = binding.spinnerTarget.selectedItemPosition
         if (sourcePos >= 0 && sourcePos < downloadedLanguages.size) {
@@ -115,7 +120,6 @@ class TextTranslationFragment : Fragment() {
         }
         
         binding.btnTranslate.isEnabled = false
-        binding.editTextOutput.setText("")
         
         scope.launch {
             val result = translationService.translate(inputText, selectedSource, selectedTarget)
@@ -124,12 +128,74 @@ class TextTranslationFragment : Fragment() {
             result.fold(
                 onSuccess = { translated ->
                     binding.editTextOutput.setText(translated)
+                    // Save to stats
+                    lastRecordId = statsManager.saveTranslation(
+                        inputText, translated, selectedSource, selectedTarget, TranslationType.TEXT
+                    )
+                    // Show rating dialog
+                    showRatingDialog()
                 },
                 onFailure = { e ->
                     Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             )
         }
+    }
+    
+    private fun showRatingDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
+        val dialog = android.app.AlertDialog.Builder(context)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        var currentRating = 0
+        val stars = listOf(
+            dialogView.findViewById<ImageButton>(R.id.star1),
+            dialogView.findViewById<ImageButton>(R.id.star2),
+            dialogView.findViewById<ImageButton>(R.id.star3),
+            dialogView.findViewById<ImageButton>(R.id.star4),
+            dialogView.findViewById<ImageButton>(R.id.star5)
+        )
+        val txtLabel = dialogView.findViewById<android.widget.TextView>(R.id.txtRatingLabel)
+
+        fun updateStars(rating: Int) {
+            currentRating = rating
+            stars.forEachIndexed { index, star ->
+                star.setImageResource(if (index < rating) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off)
+            }
+            txtLabel.text = when (rating) {
+                1 -> "Muito ruim"
+                2 -> "Ruim"
+                3 -> "Regular"
+                4 -> "Bom"
+                5 -> "Excelente!"
+                else -> "Toque para avaliar"
+            }
+        }
+
+        stars.forEachIndexed { index, star ->
+            star.setOnClickListener {
+                updateStars(index + 1)
+                if (currentRating > 0 && lastRecordId > 0) {
+                    val rating = when (currentRating) {
+                        5 -> TranslationRating.EXCELLENT
+                        4 -> TranslationRating.GOOD
+                        3 -> TranslationRating.AVERAGE
+                        2 -> TranslationRating.POOR
+                        else -> TranslationRating.BAD
+                    }
+                    statsManager.rateTranslation(lastRecordId, rating)
+                }
+                dialog.dismiss()
+            }
+        }
+
+        dialogView.findViewById<View>(R.id.btnSkip).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     override fun onResume() {

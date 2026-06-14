@@ -26,6 +26,11 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:parentActivityName=".view.MainActivity" />
+        <activity
+            android:name=".view.StatsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".view.MainActivity" />
     </application>
 
 </manifest>
