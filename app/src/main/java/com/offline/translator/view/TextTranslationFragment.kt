@@ -29,6 +29,7 @@ class TextTranslationFragment : Fragment() {
     private lateinit var historyManager: HistoryManager
     private lateinit var feedbackManager: FeedbackManager
     private lateinit var tts: TextToSpeechService
+    private lateinit var downloadManager: LanguageDownloadManager
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
     private var downloadedLanguages: List<Language> = emptyList()
@@ -48,6 +49,7 @@ class TextTranslationFragment : Fragment() {
         historyManager = HistoryManager(requireContext())
         feedbackManager = FeedbackManager(requireContext(), PreferencesManager(requireContext()))
         tts = TextToSpeechService(requireContext())
+        downloadManager = LanguageDownloadManager(requireContext())
         setupUI()
         loadLanguages()
     }
@@ -115,7 +117,12 @@ class TextTranslationFragment : Fragment() {
     private fun loadLanguages() {
         scope.launch {
             val downloaded = translationService.getDownloadedModels()
-            downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { downloaded.contains(it.code) }
+            
+            // Use ML Kit models if available, otherwise use saved downloads
+            val savedDownloads = downloadManager.getDownloadedLanguages()
+            val combinedDownloads = if (downloaded.isNotEmpty()) downloaded else savedDownloads
+            
+            downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { combinedDownloads.contains(it.code) }
             
             if (downloadedLanguages.size < 2) {
                 Toast.makeText(context, "Baixe idiomas na Biblioteca primeiro!", Toast.LENGTH_LONG).show()

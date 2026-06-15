@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.offline.translator.R
 import com.offline.translator.model.Language
+import com.offline.translator.model.LanguageDownloadManager
 import com.offline.translator.model.TranslationService
 import kotlinx.coroutines.launch
 
@@ -22,6 +23,7 @@ class LanguageLibraryActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
     private lateinit var translationService: TranslationService
+    private lateinit var downloadManager: LanguageDownloadManager
     private val languages = Language.SUPPORTED_LANGUAGES.toMutableList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +31,7 @@ class LanguageLibraryActivity : AppCompatActivity() {
         setContentView(R.layout.activity_language_library)
 
         translationService = TranslationService(this)
+        downloadManager = LanguageDownloadManager(this)
         recyclerView = findViewById(R.id.recyclerLanguages)
         progressBar = findViewById(R.id.progressBar)
 
@@ -69,6 +72,7 @@ class LanguageLibraryActivity : AppCompatActivity() {
                     languages[langIndex] = languages[langIndex].copy(isDownloading = false, isDownloaded = result.isSuccess)
                     recyclerView.adapter?.notifyItemChanged(langIndex)
                     if (result.isSuccess) {
+                        downloadManager.saveDownloadedLanguage(language.code)
                         Toast.makeText(this@LanguageLibraryActivity, "${language.name} baixado!", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(this@LanguageLibraryActivity, "Erro: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
@@ -85,6 +89,7 @@ class LanguageLibraryActivity : AppCompatActivity() {
             .setPositiveButton("Excluir") { _, _ ->
                 lifecycleScope.launch {
                     translationService.deleteLanguage(language.code)
+                    downloadManager.removeDownloadedLanguage(language.code)
                     val index = languages.indexOfFirst { it.code == language.code }
                     if (index >= 0) {
                         languages[index] = languages[index].copy(isDownloaded = false)

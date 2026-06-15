@@ -38,6 +38,7 @@ class ImageTranslationFragment : Fragment() {
     private lateinit var historyManager: HistoryManager
     private lateinit var feedbackManager: FeedbackManager
     private lateinit var tts: TextToSpeechService
+    private lateinit var downloadManager: LanguageDownloadManager
     private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
     
@@ -67,6 +68,7 @@ class ImageTranslationFragment : Fragment() {
         historyManager = HistoryManager(requireContext())
         feedbackManager = FeedbackManager(requireContext(), PreferencesManager(requireContext()))
         tts = TextToSpeechService(requireContext())
+        downloadManager = LanguageDownloadManager(requireContext())
         cameraExecutor = Executors.newSingleThreadExecutor()
         setupUI()
         loadLanguages()
@@ -139,7 +141,12 @@ class ImageTranslationFragment : Fragment() {
     private fun loadLanguages() {
         scope.launch {
             val downloaded = translationService.getDownloadedModels()
-            downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { downloaded.contains(it.code) }
+            
+            // Use ML Kit models if available, otherwise use saved downloads
+            val savedDownloads = downloadManager.getDownloadedLanguages()
+            val combinedDownloads = if (downloaded.isNotEmpty()) downloaded else savedDownloads
+            
+            downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { combinedDownloads.contains(it.code) }
             
             if (downloadedLanguages.isEmpty()) {
                 Toast.makeText(context, "Baixe idiomas na Biblioteca primeiro!", Toast.LENGTH_LONG).show()
