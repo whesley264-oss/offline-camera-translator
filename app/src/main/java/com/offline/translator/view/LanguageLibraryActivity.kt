@@ -44,7 +44,12 @@ class LanguageLibraryActivity : AppCompatActivity() {
     private fun loadLanguages() {
         progressBar.visibility = View.VISIBLE
         lifecycleScope.launch {
-            val downloaded = translationService.getDownloadedModels()
+            val mlKitDownloaded = translationService.getDownloadedModels()
+            val savedDownloaded = downloadManager.getDownloadedLanguages()
+            
+            // Combine ML Kit models with saved downloads
+            val downloaded = mlKitDownloaded + savedDownloaded
+            
             languages.forEachIndexed { index, lang ->
                 languages[index] = lang.copy(isDownloaded = downloaded.contains(lang.code))
             }

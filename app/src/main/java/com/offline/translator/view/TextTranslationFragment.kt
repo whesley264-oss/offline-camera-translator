@@ -213,6 +213,8 @@ class TextTranslationFragment : Fragment() {
     }
     
     private fun showRatingDialog(recordId: Long) {
+        if (context == null) return  // Safety check
+        
         val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
         val dialog = android.app.AlertDialog.Builder(context)
             .setView(dialogView)
@@ -256,9 +258,6 @@ class TextTranslationFragment : Fragment() {
                         else -> TranslationRating.BAD
                     }
                     statsManager.rateTranslation(recordId, rating)
-                    
-                    
-                    // Try to sync with GitHub
                     syncWithGitHub()
                 }
                 dialog.dismiss()
