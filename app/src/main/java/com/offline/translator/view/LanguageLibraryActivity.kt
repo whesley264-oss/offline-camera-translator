@@ -47,8 +47,8 @@ class LanguageLibraryActivity : AppCompatActivity() {
             val mlKitDownloaded = translationService.getDownloadedModels()
             val savedDownloaded = downloadManager.getDownloadedLanguages()
             
-            // Combine ML Kit models with saved downloads
-            val downloaded = mlKitDownloaded + savedDownloaded
+            // Combine both sources - ML Kit + saved downloads
+            val downloaded = (mlKitDownloaded + savedDownloaded).distinct()
             
             languages.forEachIndexed { index, lang ->
                 languages[index] = lang.copy(isDownloaded = downloaded.contains(lang.code))

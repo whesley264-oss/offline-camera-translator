@@ -140,36 +140,48 @@ class ImageTranslationFragment : Fragment() {
     
     private fun loadLanguages() {
         scope.launch {
-            val downloaded = translationService.getDownloadedModels()
+            val mlKitDownloaded = translationService.getDownloadedModels()
+            val savedDownloaded = downloadManager.getDownloadedLanguages()
             
-            // Use ML Kit models if available, otherwise use saved downloads
-            val savedDownloads = downloadManager.getDownloadedLanguages()
-            val combinedDownloads = if (downloaded.isNotEmpty()) downloaded else savedDownloads
+            // Combine both sources - ML Kit + saved downloads
+            val combinedDownloads = mlKitDownloaded + savedDownloaded
+            
+            if (combinedDownloads.isEmpty()) {
+                Toast.makeText(context, "Baixe idiomas na Biblioteca primeiro!", Toast.LENGTH_LONG).show()
+                binding.btnCapture.isEnabled = false
+                return@launch
+            }
             
             downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { combinedDownloads.contains(it.code) }
             
             if (downloadedLanguages.isEmpty()) {
-                Toast.makeText(context, "Baixe idiomas na Biblioteca primeiro!", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Baixe idiomas na Biblioteca!", Toast.LENGTH_LONG).show()
                 binding.btnCapture.isEnabled = false
                 return@launch
             }
             
             binding.btnCapture.isEnabled = true
             
-            val sourceAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, downloadedLanguages.map { it.name })
+            // Create adapters with proper context
+            val ctx = requireContext()
+            val sourceNames = downloadedLanguages.map { it.name }
+            val targetNames = downloadedLanguages.map { it.name }
+            
+            val sourceAdapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_item, sourceNames)
             sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerSource.adapter = sourceAdapter
             
-            val targetAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, downloadedLanguages.map { it.name })
+            val targetAdapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_item, targetNames)
             targetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerTarget.adapter = targetAdapter
             
-            val sourceIndex = downloadedLanguages.indexOfFirst { it.code == "en" }
-            val targetIndex = downloadedLanguages.indexOfFirst { it.code == "pt" }
-            if (sourceIndex >= 0) binding.spinnerSource.setSelection(sourceIndex)
-            if (targetIndex >= 0) binding.spinnerTarget.setSelection(targetIndex)
-            selectedSource = "en"
-            selectedTarget = "pt"
+            // Set default selections
+            val sourceIndex = downloadedLanguages.indexOfFirst { it.code == "en" }.takeIf { it >= 0 } ?: 0
+            val targetIndex = downloadedLanguages.indexOfFirst { it.code == "pt" }.takeIf { it >= 0 } ?: 1
+            binding.spinnerSource.setSelection(sourceIndex)
+            binding.spinnerTarget.setSelection(targetIndex)
+            selectedSource = downloadedLanguages[sourceIndex].code
+            selectedTarget = downloadedLanguages[targetIndex].code
         }
     }
     
