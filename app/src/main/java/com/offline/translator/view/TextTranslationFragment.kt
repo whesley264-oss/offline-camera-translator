@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -177,50 +178,58 @@ class TextTranslationFragment : Fragment() {
         }
         
         if (downloadedLanguages.isEmpty()) {
-            Toast.makeText(context, "Baixe idiomas primeiro!", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Baixe idiomas na Biblioteca!", Toast.LENGTH_LONG).show()
             return
         }
         
         val sourcePos = binding.spinnerSource.selectedItemPosition
         val targetPos = binding.spinnerTarget.selectedItemPosition
-        if (sourcePos >= 0 && sourcePos < downloadedLanguages.size) {
-            selectedSource = downloadedLanguages[sourcePos].code
+        
+        // Validate positions
+        if (sourcePos < 0 || sourcePos >= downloadedLanguages.size ||
+            targetPos < 0 || targetPos >= downloadedLanguages.size) {
+            Toast.makeText(context, "Selecione os idiomas", Toast.LENGTH_SHORT).show()
+            return
         }
-        if (targetPos >= 0 && targetPos < downloadedLanguages.size) {
-            selectedTarget = downloadedLanguages[targetPos].code
-        }
+        
+        val source = downloadedLanguages[sourcePos].code
+        val target = downloadedLanguages[targetPos].code
         
         binding.btnTranslate.isEnabled = false
         
         scope.launch {
-            val result = translationService.translate(inputText, selectedSource, selectedTarget)
-            binding.btnTranslate.isEnabled = true
-            
-            result.fold(
-                onSuccess = { translated ->
-                    binding.editTextOutput.setText(translated)
-                    feedbackManager.vibrateOnTranslate()
-                    feedbackManager.animateSuccess(binding.editTextOutput)
-                    
-                    // Save to local stats
-                    val recordId = statsManager.saveTranslation(
-                        inputText, translated, selectedSource, selectedTarget, TranslationType.TEXT
-                    )
-                    
-                    // Save to history
-                    historyManager.saveTranslation(
-                        inputText, translated, selectedSource, selectedTarget, "text"
-                    )
-                    
-                    // Show rating dialog
-                    showRatingDialog(recordId)
-                },
-                onFailure = { e ->
-                    Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-                    feedbackManager.vibrateOnError()
-                    feedbackManager.animateError(binding.editTextOutput)
-                }
-            )
+            try {
+                val result = translationService.translate(inputText, source, target)
+                binding.btnTranslate.isEnabled = true
+                
+                result.fold(
+                    onSuccess = { translated ->
+                        binding.editTextOutput.setText(translated)
+                        feedbackManager.vibrateOnTranslate()
+                        feedbackManager.animateSuccess(binding.editTextOutput)
+                        
+                        // Save to local stats
+                        try {
+                            val recordId = statsManager.saveTranslation(
+                                inputText, translated, source, target, TranslationType.TEXT
+                            )
+                            historyManager.saveTranslation(
+                                inputText, translated, source, target, "text"
+                            )
+                            showRatingDialog(recordId)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error saving translation: ${e.message}")
+                        }
+                    },
+                    onFailure = { e ->
+                        Toast.makeText(context, e.message ?: "Erro na tradução", Toast.LENGTH_LONG).show()
+                        feedbackManager.vibrateOnError()
+                    }
+                )
+            } catch (e: Exception) {
+                binding.btnTranslate.isEnabled = true
+                Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
     
@@ -305,5 +314,9 @@ class TextTranslationFragment : Fragment() {
         super.onDestroyView()
         scope.cancel()
         _binding = null
+    }
+    
+    companion object {
+        private const val TAG = "TextTranslationFragment"
     }
 }

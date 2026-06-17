@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -213,20 +214,27 @@ class ImageTranslationFragment : Fragment() {
     
     private fun captureAndTranslate() {
         if (downloadedLanguages.isEmpty()) {
-            Toast.makeText(context, "Baixe idiomas primeiro!", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Baixe idiomas na Biblioteca!", Toast.LENGTH_LONG).show()
             return
         }
 
-        val capture = imageCapture ?: return
+        val capture = imageCapture ?: run {
+            Toast.makeText(context, "Câmera não disponível", Toast.LENGTH_SHORT).show()
+            return
+        }
         
         val sourcePos = binding.spinnerSource.selectedItemPosition
         val targetPos = binding.spinnerTarget.selectedItemPosition
-        if (sourcePos >= 0 && sourcePos < downloadedLanguages.size) {
-            selectedSource = downloadedLanguages[sourcePos].code
+        
+        // Validate positions
+        if (sourcePos < 0 || sourcePos >= downloadedLanguages.size ||
+            targetPos < 0 || targetPos >= downloadedLanguages.size) {
+            Toast.makeText(context, "Selecione os idiomas", Toast.LENGTH_SHORT).show()
+            return
         }
-        if (targetPos >= 0 && targetPos < downloadedLanguages.size) {
-            selectedTarget = downloadedLanguages[targetPos].code
-        }
+        
+        selectedSource = downloadedLanguages[sourcePos].code
+        selectedTarget = downloadedLanguages[targetPos].code
         
         binding.progressBar.visibility = View.VISIBLE
         binding.txtResult.visibility = View.GONE
@@ -246,59 +254,67 @@ class ImageTranslationFragment : Fragment() {
     
     private fun processImage(bitmap: Bitmap) {
         scope.launch {
-            val rect = binding.selectionOverlay.getSelectionRect()
-            val finalBitmap = if (rect.width() > 50 && rect.height() > 50) {
-                val scaleX = bitmap.width.toFloat() / binding.viewFinder.width
-                val scaleY = bitmap.height.toFloat() / binding.viewFinder.height
-                Bitmap.createBitmap(bitmap, 
-                    (rect.left * scaleX).toInt().coerceIn(0, bitmap.width),
-                    (rect.top * scaleY).toInt().coerceIn(0, bitmap.height),
-                    (rect.width() * scaleX).toInt().coerceIn(1, bitmap.width),
-                    (rect.height() * scaleY).toInt().coerceIn(1, bitmap.height))
-            } else bitmap
-            
-            val ocrResult = textRecognitionService.recognizeText(finalBitmap)
-            ocrResult.fold(
-                onSuccess = { text ->
-                    if (text.isBlank()) {
-                        binding.progressBar.visibility = View.GONE
-                        Toast.makeText(context, "Nenhum texto detectado", Toast.LENGTH_SHORT).show()
-                        return@fold
-                    }
-                    lastDetectedText = text
-                    val translateResult = translationService.translate(text, selectedSource, selectedTarget)
-                    binding.progressBar.visibility = View.GONE
-                    translateResult.fold(
-                        onSuccess = { translated ->
-                            lastTranslatedText = translated
-                            binding.txtResult.text = translated
-                            binding.txtResult.visibility = View.VISIBLE
-                            
-                            feedbackManager.vibrateOnTranslate()
-                            feedbackManager.animateSlideUp(binding.txtResult)
-                            
-                            val recordId = statsManager.saveTranslation(
-                                text, translated, selectedSource, selectedTarget, TranslationType.IMAGE
-                            )
-                            
-                            historyManager.saveTranslation(
-                                text, translated, selectedSource, selectedTarget, "image"
-                            )
-                            
-                            showRatingDialog(recordId)
-                        },
-                        onFailure = { e ->
-                            Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-                            feedbackManager.vibrateOnError()
+            try {
+                val rect = binding.selectionOverlay.getSelectionRect()
+                val finalBitmap = if (rect.width() > 50 && rect.height() > 50) {
+                    val scaleX = bitmap.width.toFloat() / binding.viewFinder.width
+                    val scaleY = bitmap.height.toFloat() / binding.viewFinder.height
+                    Bitmap.createBitmap(bitmap, 
+                        (rect.left * scaleX).toInt().coerceIn(0, bitmap.width),
+                        (rect.top * scaleY).toInt().coerceIn(0, bitmap.height),
+                        (rect.width() * scaleX).toInt().coerceIn(1, bitmap.width),
+                        (rect.height() * scaleY).toInt().coerceIn(1, bitmap.height))
+                } else bitmap
+                
+                val ocrResult = textRecognitionService.recognizeText(finalBitmap)
+                ocrResult.fold(
+                    onSuccess = { text ->
+                        if (text.isBlank()) {
+                            binding.progressBar.visibility = View.GONE
+                            Toast.makeText(context, "Nenhum texto detectado", Toast.LENGTH_SHORT).show()
+                            return@fold
                         }
-                    )
-                },
-                onFailure = { e ->
-                    binding.progressBar.visibility = View.GONE
-                    Toast.makeText(context, "Erro OCR: ${e.message}", Toast.LENGTH_LONG).show()
-                    feedbackManager.vibrateOnError()
-                }
-            )
+                        lastDetectedText = text
+                        
+                        val translateResult = translationService.translate(text, selectedSource, selectedTarget)
+                        binding.progressBar.visibility = View.GONE
+                        
+                        translateResult.fold(
+                            onSuccess = { translated ->
+                                lastTranslatedText = translated
+                                binding.txtResult.text = translated
+                                binding.txtResult.visibility = View.VISIBLE
+                                
+                                feedbackManager.vibrateOnTranslate()
+                                feedbackManager.animateSlideUp(binding.txtResult)
+                                
+                                try {
+                                    val recordId = statsManager.saveTranslation(
+                                        text, translated, selectedSource, selectedTarget, TranslationType.IMAGE
+                                    )
+                                    historyManager.saveTranslation(
+                                        text, translated, selectedSource, selectedTarget, "image"
+                                    )
+                                    showRatingDialog(recordId)
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "Error saving translation: ${e.message}")
+                                }
+                            },
+                            onFailure = { e ->
+                                Toast.makeText(context, e.message ?: "Erro na tradução", Toast.LENGTH_LONG).show()
+                                feedbackManager.vibrateOnError()
+                            }
+                        )
+                    },
+                    onFailure = { e ->
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(context, "OCR falhou: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            } catch (e: Exception) {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
     
@@ -383,5 +399,9 @@ class ImageTranslationFragment : Fragment() {
         scope.cancel()
         cameraExecutor.shutdown()
         _binding = null
+    }
+    
+    companion object {
+        private const val TAG = "ImageTranslationFragment"
     }
 }
