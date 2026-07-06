@@ -2,12 +2,9 @@ package com.offline.translator.view
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.tabs.TabLayoutMediator
-import com.offline.translator.R
 import com.offline.translator.databinding.ActivityMainBinding
 import com.offline.translator.model.PreferencesManager
 
@@ -21,11 +18,21 @@ class MainActivity : AppCompatActivity() {
             if (prefs.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES
             else AppCompatDelegate.MODE_NIGHT_NO
         )
-        
+
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Setup button clicks
+        binding.btnSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        binding.btnHistory.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
+
+        // Setup ViewPager
         val pagerAdapter = TranslationPagerAdapter(this)
         binding.viewPager.adapter = pagerAdapter
 
@@ -36,24 +43,5 @@ class MainActivity : AppCompatActivity() {
                 else -> ""
             }
         }.attach()
-    }
-    
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-    
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-                true
-            }
-            R.id.action_history -> {
-                startActivity(Intent(this, HistoryActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 }

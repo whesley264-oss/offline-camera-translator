@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ImageButton
@@ -36,7 +37,8 @@ class TextTranslationFragment : Fragment() {
     private var downloadedLanguages: List<Language> = emptyList()
     private var selectedSource = "en"
     private var selectedTarget = "pt"
-    private var isInitializing = true  // Prevent swap on first load
+    private var isInitializing = true
+    private var isTranslating = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTextTranslationBinding.inflate(inflater, container, false)
@@ -57,7 +59,6 @@ class TextTranslationFragment : Fragment() {
     }
 
     private fun setupUI() {
-        // Swap button
         binding.btnSwap.setOnClickListener {
             val temp = selectedSource
             selectedSource = selectedTarget
@@ -67,21 +68,19 @@ class TextTranslationFragment : Fragment() {
             Toast.makeText(context, "Idiomas trocados!", Toast.LENGTH_SHORT).show()
         }
 
-        // Smart swap when source changes
         binding.spinnerSource.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (isInitializing) {
                     isInitializing = false
                     return
                 }
-                if (position < downloadedLanguages.size) {
+                if (position < downloadedLanguages.size && !isTranslating) {
                     val newSource = downloadedLanguages[position].code
-                    // If new source equals current target, swap them
                     if (newSource == selectedTarget) {
                         selectedTarget = selectedSource
                         selectedSource = newSource
                         updateSpinnerSelections()
-                        Toast.makeText(context, "Idiomas ajustados automaticamente!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Ajuste automático!", Toast.LENGTH_SHORT).show()
                     } else {
                         selectedSource = newSource
                     }
@@ -90,18 +89,16 @@ class TextTranslationFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Smart swap when target changes
         binding.spinnerTarget.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (isInitializing) return
+                if (isInitializing || isTranslating) return
                 if (position < downloadedLanguages.size) {
                     val newTarget = downloadedLanguages[position].code
-                    // If new target equals current source, swap them
                     if (newTarget == selectedSource) {
                         selectedSource = selectedTarget
                         selectedTarget = newTarget
                         updateSpinnerSelections()
-                        Toast.makeText(context, "Idiomas ajustados automaticamente!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Ajuste automático!", Toast.LENGTH_SHORT).show()
                     } else {
                         selectedTarget = newTarget
                     }
@@ -110,30 +107,29 @@ class TextTranslationFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Translate button
         binding.btnTranslate.setOnClickListener {
-            feedbackManager.animatePulse(it)
-            translateText()
+            if (!isTranslating) {
+                feedbackManager.animatePulse(it)
+                translateText()
+            }
         }
 
-        // Library button
         binding.btnLibrary.setOnClickListener {
             startActivity(Intent(requireContext(), LanguageLibraryActivity::class.java))
         }
 
-        // Copy button
         binding.btnCopy.setOnClickListener {
             val text = binding.editTextOutput.text.toString()
-            if (text.isNotBlank()) copyToClipboard(text)
+            if (text.isNotBlank()) {
+                copyToClipboard(text)
+            }
         }
 
-        // Share button
         binding.btnShare.setOnClickListener {
             val text = binding.editTextOutput.text.toString()
             if (text.isNotBlank()) shareText(text)
         }
 
-        // Speak button
         binding.btnSpeak.setOnClickListener {
             val text = binding.editTextOutput.text.toString()
             if (text.isNotBlank()) speakText(text)
@@ -168,50 +164,55 @@ class TextTranslationFragment : Fragment() {
 
     private fun loadLanguages() {
         scope.launch {
-            val mlKitDownloaded = translationService.getDownloadedModels()
-            val savedDownloaded = downloadManager.getDownloadedLanguages()
-            val combinedDownloads = mlKitDownloaded + savedDownloaded
+            try {
+                val mlKitDownloaded = translationService.getDownloadedModels()
+                val savedDownloaded = downloadManager.getDownloadedLanguages()
+                val combinedDownloads = (mlKitDownloaded + savedDownloaded).toSet()
 
-            if (combinedDownloads.isEmpty()) {
-                showNoLanguagesWarning()
-                return@launch
+                if (combinedDownloads.isEmpty()) {
+                    showNoLanguagesWarning()
+                    return@launch
+                }
+
+                downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { combinedDownloads.contains(it.code) }
+
+                if (downloadedLanguages.size < 2) {
+                    showNoLanguagesWarning()
+                    return@launch
+                }
+
+                binding.btnTranslate.isEnabled = true
+
+                val ctx = requireContext()
+                val sourceNames = downloadedLanguages.map { it.name }
+                val targetNames = downloadedLanguages.map { it.name }
+
+                val sourceAdapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_item, sourceNames)
+                sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                binding.spinnerSource.adapter = sourceAdapter
+
+                val targetAdapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_item, targetNames)
+                targetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                binding.spinnerTarget.adapter = targetAdapter
+
+                isInitializing = true
+                val sourceIndex = downloadedLanguages.indexOfFirst { it.code == selectedSource }.takeIf { it >= 0 } ?: 0
+                val targetIndex = downloadedLanguages.indexOfFirst { it.code == selectedTarget }.takeIf { it >= 0 } ?: 1
+                binding.spinnerSource.setSelection(sourceIndex)
+                binding.spinnerTarget.setSelection(targetIndex)
+                isInitializing = false
+
+                Toast.makeText(context, "✓ ${downloadedLanguages.size} idiomas carregados!", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading languages: ${e.message}")
+                Toast.makeText(context, "Erro ao carregar idiomas", Toast.LENGTH_SHORT).show()
             }
-
-            downloadedLanguages = Language.SUPPORTED_LANGUAGES.filter { combinedDownloads.contains(it.code) }
-
-            if (downloadedLanguages.size < 2) {
-                showNoLanguagesWarning()
-                return@launch
-            }
-
-            binding.btnTranslate.isEnabled = true
-
-            val ctx = requireContext()
-            val sourceNames = downloadedLanguages.map { it.name }
-            val targetNames = downloadedLanguages.map { it.name }
-
-            val sourceAdapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_item, sourceNames)
-            sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            binding.spinnerSource.adapter = sourceAdapter
-
-            val targetAdapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_item, targetNames)
-            targetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            binding.spinnerTarget.adapter = targetAdapter
-
-            // Set defaults
-            isInitializing = true
-            val sourceIndex = downloadedLanguages.indexOfFirst { it.code == selectedSource }.takeIf { it >= 0 } ?: 0
-            val targetIndex = downloadedLanguages.indexOfFirst { it.code == selectedTarget }.takeIf { it >= 0 } ?: 1
-            binding.spinnerSource.setSelection(sourceIndex)
-            binding.spinnerTarget.setSelection(targetIndex)
-
-            Toast.makeText(context, "✓ ${downloadedLanguages.size} idiomas carregados!", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun showNoLanguagesWarning() {
         binding.btnTranslate.isEnabled = false
-        Toast.makeText(context, "⚠️ Baixe idiomas na Biblioteca primeiro!", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "⚠️ Baixe idiomas na Biblioteca!", Toast.LENGTH_LONG).show()
     }
 
     private fun updateSpinnerSelections() {
@@ -225,8 +226,9 @@ class TextTranslationFragment : Fragment() {
 
     private fun translateText() {
         val inputText = binding.editTextInput.text.toString().trim()
+        
         if (inputText.isEmpty()) {
-            Toast.makeText(context, "Digite um texto para traduzir", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Digite um texto", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -235,20 +237,27 @@ class TextTranslationFragment : Fragment() {
             return
         }
 
+        isTranslating = true
         binding.btnTranslate.isEnabled = false
         binding.btnTranslate.text = "Traduzindo..."
 
         scope.launch {
             try {
                 val result = translationService.translate(inputText, selectedSource, selectedTarget)
-                binding.btnTranslate.isEnabled = true
-                binding.btnTranslate.text = "TRADUZIR"
+                
+                withContext(Dispatchers.Main) {
+                    isTranslating = false
+                    binding.btnTranslate.isEnabled = true
+                    binding.btnTranslate.text = "TRADUZIR"
+                }
 
                 result.fold(
                     onSuccess = { translated ->
-                        binding.editTextOutput.setText(translated)
-                        feedbackManager.vibrateOnTranslate()
-                        feedbackManager.animateSuccess(binding.editTextOutput)
+                        withContext(Dispatchers.Main) {
+                            binding.editTextOutput.setText(translated)
+                            feedbackManager.vibrateOnTranslate()
+                            feedbackManager.animateSuccess(binding.editTextOutput)
+                        }
 
                         TranslationWidgetProvider.updateLastTranslation(requireContext(), inputText, translated)
 
@@ -261,18 +270,23 @@ class TextTranslationFragment : Fragment() {
                             )
                             showRatingDialog(recordId)
                         } catch (e: Exception) {
-                            Log.e(TAG, "Error saving translation: ${e.message}")
+                            Log.e(TAG, "Error saving: ${e.message}")
                         }
                     },
                     onFailure = { e ->
-                        Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-                        feedbackManager.vibrateOnError()
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                            feedbackManager.vibrateOnError()
+                        }
                     }
                 )
             } catch (e: Exception) {
-                binding.btnTranslate.isEnabled = true
-                binding.btnTranslate.text = "TRADUZIR"
-                Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                withContext(Dispatchers.Main) {
+                    isTranslating = false
+                    binding.btnTranslate.isEnabled = true
+                    binding.btnTranslate.text = "TRADUZIR"
+                    Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -280,70 +294,78 @@ class TextTranslationFragment : Fragment() {
     private fun showRatingDialog(recordId: Long) {
         if (context == null) return
 
-        val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
-        val dialog = android.app.AlertDialog.Builder(context)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
+        try {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
+            val dialog = android.app.AlertDialog.Builder(context)
+                .setView(dialogView)
+                .setCancelable(true)
+                .create()
 
-        var currentRating = 0
-        val stars = listOf(
-            dialogView.findViewById<ImageButton>(R.id.star1),
-            dialogView.findViewById<ImageButton>(R.id.star2),
-            dialogView.findViewById<ImageButton>(R.id.star3),
-            dialogView.findViewById<ImageButton>(R.id.star4),
-            dialogView.findViewById<ImageButton>(R.id.star5)
-        )
-        val txtLabel = dialogView.findViewById<android.widget.TextView>(R.id.txtRatingLabel)
+            var currentRating = 0
+            val stars = listOf(
+                dialogView.findViewById<ImageButton>(R.id.star1),
+                dialogView.findViewById<ImageButton>(R.id.star2),
+                dialogView.findViewById<ImageButton>(R.id.star3),
+                dialogView.findViewById<ImageButton>(R.id.star4),
+                dialogView.findViewById<ImageButton>(R.id.star5)
+            )
+            val txtLabel = dialogView.findViewById<android.widget.TextView>(R.id.txtRatingLabel)
 
-        fun updateStars(rating: Int) {
-            currentRating = rating
-            stars.forEachIndexed { index, star ->
-                star.setImageResource(if (index < rating) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off)
-            }
-            txtLabel.text = when (rating) {
-                1 -> "Muito ruim"
-                2 -> "Ruim"
-                3 -> "Regular"
-                4 -> "Bom"
-                5 -> "Excelente!"
-                else -> "Toque para avaliar"
-            }
-        }
-
-        stars.forEachIndexed { index, star ->
-            star.setOnClickListener {
-                updateStars(index + 1)
-                if (currentRating > 0) {
-                    val rating = when (currentRating) {
-                        5 -> TranslationRating.EXCELLENT
-                        4 -> TranslationRating.GOOD
-                        3 -> TranslationRating.AVERAGE
-                        2 -> TranslationRating.POOR
-                        else -> TranslationRating.BAD
-                    }
-                    statsManager.rateTranslation(recordId, rating)
-                    syncWithGitHub()
+            fun updateStars(rating: Int) {
+                currentRating = rating
+                stars.forEachIndexed { index, star ->
+                    star.setImageResource(if (index < rating) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off)
                 }
+                txtLabel.text = when (rating) {
+                    1 -> "Muito ruim"
+                    2 -> "Ruim"
+                    3 -> "Regular"
+                    4 -> "Bom"
+                    5 -> "Excelente!"
+                    else -> "Toque para avaliar"
+                }
+            }
+
+            stars.forEachIndexed { index, star ->
+                star.setOnClickListener {
+                    updateStars(index + 1)
+                    if (currentRating > 0) {
+                        val rating = when (currentRating) {
+                            5 -> TranslationRating.EXCELLENT
+                            4 -> TranslationRating.GOOD
+                            3 -> TranslationRating.AVERAGE
+                            2 -> TranslationRating.POOR
+                            else -> TranslationRating.BAD
+                        }
+                        statsManager.rateTranslation(recordId, rating)
+                        syncWithGitHub()
+                        dialog.dismiss()
+                    }
+                }
+            }
+
+            dialogView.findViewById<View>(R.id.btnSkip).setOnClickListener {
                 dialog.dismiss()
             }
-        }
 
-        dialogView.findViewById<View>(R.id.btnSkip).setOnClickListener {
-            dialog.dismiss()
+            dialog.show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing dialog: ${e.message}")
         }
-
-        dialog.show()
     }
 
     private fun syncWithGitHub() {
         scope.launch {
-            val pending = githubSync.getPendingCount()
-            if (pending > 0) {
-                val result = githubSync.syncWithGitHub()
-                result.onSuccess {
-                    Toast.makeText(context, "✓ Estatísticas sincronizadas!", Toast.LENGTH_SHORT).show()
+            try {
+                val pending = githubSync.getPendingCount()
+                if (pending > 0) {
+                    val result = githubSync.syncWithGitHub()
+                    result.onSuccess {
+                        Toast.makeText(context, "✓ Sincronizado!", Toast.LENGTH_SHORT).show()
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Sync error: ${e.message}")
             }
         }
     }
