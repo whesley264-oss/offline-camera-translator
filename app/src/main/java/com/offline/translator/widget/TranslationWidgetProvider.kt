@@ -22,6 +22,42 @@ class TranslationWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        
+        when (intent.action) {
+            "SWAP_LANGUAGES" -> {
+                val prefs = PreferencesManager(context)
+                val source = prefs.getSourceLanguage()
+                val target = prefs.getTargetLanguage()
+                prefs.setSourceLanguage(target)
+                prefs.setTargetLanguage(source)
+                
+                val appWidgetManager = AppWidgetManager.getInstance(context)
+                val appWidgetIds = appWidgetManager.getAppWidgetIds(
+                    Intent(context, TranslationWidgetProvider::class.java).component
+                )
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            }
+            "OPEN_CAMERA" -> {
+                val openIntent = Intent(context, MainActivity::class.java).apply {
+                    putExtra("open_tab", "camera")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                context.startActivity(openIntent)
+            }
+            "OPEN_TEXT" -> {
+                val openIntent = Intent(context, MainActivity::class.java).apply {
+                    putExtra("open_tab", "text")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                context.startActivity(openIntent)
+            }
+        }
+    }
+
     override fun onEnabled(context: Context) {
         // First widget added
     }
@@ -38,32 +74,34 @@ class TranslationWidgetProvider : AppWidgetProvider() {
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_translation)
             
-            // Get saved preferences
             val prefs = PreferencesManager(context)
             val source = prefs.getSourceLanguage().uppercase()
             val target = prefs.getTargetLanguage().uppercase()
             
             views.setTextViewText(R.id.txtLanguagePair, "$source → $target")
             
-            // Get last translation from SharedPreferences
-            val lastTranslation = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
-                .getString("last_translation", "Toque para traduzir") ?: "Toque para traduzir"
+            val widgetPrefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+            val lastSource = widgetPrefs.getString("last_source", null)
+            val lastTranslation = widgetPrefs.getString("last_translation", "Toque para traduzir") ?: "Toque para traduzir"
             
+            views.setTextViewText(R.id.txtSourceText, lastSource ?: "Texto original")
             views.setTextViewText(R.id.txtLastTranslation, lastTranslation)
             
-            // Create intent to open app
-            val intent = Intent(context, MainActivity::class.java)
-            val pendingIntent = PendingIntent.getActivity(
+            // Open app
+            val openIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val openPendingIntent = PendingIntent.getActivity(
                 context,
                 0,
-                intent,
+                openIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+            views.setOnClickPendingIntent(R.id.btnOpen, openPendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_container, openPendingIntent)
+            views.setOnClickPendingIntent(R.id.translationContainer, openPendingIntent)
             
-            views.setOnClickPendingIntent(R.id.btnOpen, pendingIntent)
-            views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
-            
-            // Swap languages button
+            // Swap languages
             val swapIntent = Intent(context, TranslationWidgetProvider::class.java).apply {
                 action = "SWAP_LANGUAGES"
             }
@@ -75,16 +113,40 @@ class TranslationWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.btnSwap, swapPendingIntent)
             
+            // Open camera
+            val cameraIntent = Intent(context, TranslationWidgetProvider::class.java).apply {
+                action = "OPEN_CAMERA"
+            }
+            val cameraPendingIntent = PendingIntent.getBroadcast(
+                context,
+                2,
+                cameraIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.btnCamera, cameraPendingIntent)
+            
+            // Open text
+            val textIntent = Intent(context, TranslationWidgetProvider::class.java).apply {
+                action = "OPEN_TEXT"
+            }
+            val textPendingIntent = PendingIntent.getBroadcast(
+                context,
+                3,
+                textIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.btnText, textPendingIntent)
+            
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
         
-        fun updateLastTranslation(context: Context, translation: String) {
+        fun updateLastTranslation(context: Context, sourceText: String, translatedText: String) {
             context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
                 .edit()
-                .putString("last_translation", translation)
+                .putString("last_source", sourceText)
+                .putString("last_translation", translatedText)
                 .apply()
             
-            // Update all widgets
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(
                 Intent(context, TranslationWidgetProvider::class.java).component

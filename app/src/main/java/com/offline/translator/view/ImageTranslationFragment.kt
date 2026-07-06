@@ -26,6 +26,7 @@ import androidx.fragment.app.Fragment
 import com.offline.translator.R
 import com.offline.translator.databinding.FragmentImageTranslationBinding
 import com.offline.translator.model.*
+import com.offline.translator.widget.TranslationWidgetProvider
 import kotlinx.coroutines.*
 import java.io.InputStream
 import java.util.concurrent.ExecutorService
@@ -55,6 +56,7 @@ class ImageTranslationFragment : Fragment() {
     private var lastTranslatedText: String = ""
     private var currentBitmap: Bitmap? = null
     private var isShowingGalleryImage = false
+    private var cameraProvider: ProcessCameraProvider? = null
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else Toast.makeText(context, "Permissão de câmera negada", Toast.LENGTH_SHORT).show()
@@ -277,14 +279,14 @@ class ImageTranslationFragment : Fragment() {
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
+            cameraProvider = cameraProviderFuture.get()
             
             val preview = Preview.Builder().build().also { it.setSurfaceProvider(binding.viewFinder.surfaceProvider) }
             imageCapture = ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY).build()
             
             try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture)
+                cameraProvider?.unbindAll()
+                cameraProvider?.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture)
             } catch (e: Exception) {
                 Toast.makeText(context, "Erro na câmera: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -366,6 +368,9 @@ class ImageTranslationFragment : Fragment() {
                                 binding.txtTranslatedText.text = translated
                                 binding.translatedTextOverlay.visibility = View.VISIBLE
                                 feedbackManager.animateSlideUp(binding.translatedTextOverlay)
+                                
+                                // Update widget with last translation
+                                TranslationWidgetProvider.updateLastTranslation(requireContext(), text, translated)
                                 
                                 // Also update the bottom card text
                                 binding.txtResult.text = translated
@@ -477,12 +482,31 @@ class ImageTranslationFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         loadLanguages()
+        // Resume camera if available and in camera mode
+        if (!isShowingGalleryImage && hasCameraPermission()) {
+            startCamera()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Release camera resources when not visible - saves battery
+        if (!isShowingGalleryImage) {
+            cameraProvider?.unbindAll()
+        }
+        // Stop TTS to save battery
+        if (::tts.isInitialized) {
+            tts.stop()
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         scope.cancel()
         cameraExecutor.shutdown()
+        if (::tts.isInitialized) {
+            tts.shutdown()
+        }
         _binding = null
     }
     
