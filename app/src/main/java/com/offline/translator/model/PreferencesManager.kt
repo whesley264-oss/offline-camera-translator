@@ -22,6 +22,9 @@ class PreferencesManager(context: Context) {
     fun isAnimationsEnabled(): Boolean = prefs.getBoolean(KEY_ANIMATIONS, true)
     fun setAnimations(enabled: Boolean) = prefs.edit { putBoolean(KEY_ANIMATIONS, enabled) }
 
+    fun isClipboardTranslationEnabled(): Boolean = prefs.getBoolean(KEY_CLIPBOARD_TRANSLATION, false)
+    fun setClipboardTranslation(enabled: Boolean) = prefs.edit { putBoolean(KEY_CLIPBOARD_TRANSLATION, enabled) }
+
     fun getSourceLanguage(): String = prefs.getString(KEY_SOURCE_LANG, "en") ?: "en"
     fun setSourceLanguage(code: String) = prefs.edit { putString(KEY_SOURCE_LANG, code) }
 
@@ -38,6 +41,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_AUTO_DETECT = "auto_detect"
         private const val KEY_HAPTIC = "haptic"
         private const val KEY_ANIMATIONS = "animations"
+        private const val KEY_CLIPBOARD_TRANSLATION = "clipboard_translation"
         private const val KEY_SOURCE_LANG = "source_lang"
         private const val KEY_TARGET_LANG = "target_lang"
         private const val KEY_FIRST_LAUNCH = "first_launch"

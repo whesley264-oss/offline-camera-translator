@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#1E1E1E">
+
+    <!-- Header -->
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔤 EN → PT"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"/>
+
+    <!-- Original Text -->
+    <TextView
+        android:id="@+id/txtSourceLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Original:"
+        android:textSize="11sp"
+        android:textColor="#888888"/>
+
+    <TextView
+        android:id="@+id/txtSource"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Texto original..."
+        android:textSize="13sp"
+        android:textColor="#CCCCCC"
+        android:maxLines="3"
+        android:ellipsize="end"/>
+
+    <!-- Translated Text -->
+    <TextView
+        android:id="@+id/txtResultLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Tradução:"
+        android:textSize="11sp"
+        android:textColor="#4CAF50"/>
+
+    <TextView
+        android:id="@+id/txtResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Texto traduzido..."
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:maxLines="4"
+        android:ellipsize="end"/>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnCopy"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="📋 Copiar"
+            android:textSize="12sp"
+            style="@style/Widget.Material3.Button.TonalButton"/>
+
+        <View
+            android:layout_width="8dp"
+            android:layout_height="1dp"/>
+
+        <Button
+            android:id="@+id/btnSwap"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="⇄ Trocar"
+            android:textSize="12sp"
+            style="@style/Widget.Material3.Button.TonalButton"/>
+
+        <View
+            android:layout_width="8dp"
+            android:layout_height="1dp"/>
+
+        <Button
+            android:id="@+id/btnOpen"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="App"
+            android:textSize="12sp"
+            style="@style/Widget.Material3.Button.TonalButton"/>
+    </LinearLayout>
+
+</LinearLayout>

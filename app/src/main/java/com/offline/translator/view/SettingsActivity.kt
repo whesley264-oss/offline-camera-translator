@@ -1,20 +1,37 @@
 package com.offline.translator.view
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import com.offline.translator.R
 import com.offline.translator.databinding.ActivitySettingsBinding
 import com.offline.translator.model.PreferencesManager
+import com.offline.translator.service.ClipboardTranslationService
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var prefs: PreferencesManager
+    
+    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            prefs.setClipboardTranslation(true)
+            startClipboardService()
+            binding.switchClipboard.isChecked = true
+        } else {
+            binding.switchClipboard.isChecked = false
+            Toast.makeText(this, "Permissão necessária para notificações", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +64,24 @@ class SettingsActivity : AppCompatActivity() {
         binding.switchAnimations.setOnCheckedChangeListener { _, isChecked ->
             prefs.setAnimations(isChecked)
         }
+        
+        // Clipboard translation toggle
+        binding.switchClipboard.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // Check notification permission on Android 13+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        return@setOnCheckedChangeListener
+                    }
+                }
+                prefs.setClipboardTranslation(true)
+                startClipboardService()
+            } else {
+                prefs.setClipboardTranslation(false)
+                stopClipboardService()
+            }
+        }
 
         // Font size spinner
         val fontSizes = arrayOf("Pequeno", "Médio", "Grande", "Extra Grande")
@@ -65,6 +100,11 @@ class SettingsActivity : AppCompatActivity() {
         // Auto-detect toggle
         binding.switchAutoDetect.setOnCheckedChangeListener { _, isChecked ->
             prefs.setAutoDetect(isChecked)
+        }
+        
+        // Auto-start clipboard service if enabled
+        if (prefs.isClipboardTranslationEnabled()) {
+            startClipboardService()
         }
 
         // Languages button
@@ -109,5 +149,23 @@ class SettingsActivity : AppCompatActivity() {
 
         // Auto-detect
         binding.switchAutoDetect.isChecked = prefs.isAutoDetect()
+        
+        // Clipboard translation
+        binding.switchClipboard.isChecked = prefs.isClipboardTranslationEnabled()
+    }
+    
+    private fun startClipboardService() {
+        val intent = Intent(this, ClipboardTranslationService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+    
+    private fun stopClipboardService() {
+        val intent = Intent(this, ClipboardTranslationService::class.java)
+        intent.action = ClipboardTranslationService.ACTION_STOP
+        startService(intent)
     }
 }
