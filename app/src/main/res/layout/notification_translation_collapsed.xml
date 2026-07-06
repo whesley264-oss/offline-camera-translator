@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#1E1E1E">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/txtTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🔤 Traduzindo..."
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"/>
+
+        <TextView
+            android:id="@+id/txtLanguages"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EN → PT"
+            android:textSize="11sp"
+            android:textColor="#4CAF50"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtSource"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Texto copiado..."
+        android:textSize="12sp"
+        android:textColor="#AAAAAA"
+        android:maxLines="1"
+        android:ellipsize="end"/>
+
+</LinearLayout>
