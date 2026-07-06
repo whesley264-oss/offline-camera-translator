@@ -208,6 +208,9 @@ class TextTranslationFragment : Fragment() {
                         feedbackManager.vibrateOnTranslate()
                         feedbackManager.animateSuccess(binding.editTextOutput)
                         
+                        // Update widget with last translation
+                        TranslationWidgetProvider.updateLastTranslation(requireContext(), inputText, translated)
+                        
                         // Save to local stats
                         try {
                             val recordId = statsManager.saveTranslation(
@@ -310,9 +313,20 @@ class TextTranslationFragment : Fragment() {
         loadLanguages()
     }
 
+    override fun onPause() {
+        super.onPause()
+        // Stop TTS to save battery when leaving the fragment
+        if (::tts.isInitialized) {
+            tts.stop()
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         scope.cancel()
+        if (::tts.isInitialized) {
+            tts.shutdown()
+        }
         _binding = null
     }
     

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="12dp"
     android:background="@drawable/widget_background"
     android:gravity="center">
 
@@ -19,8 +19,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🔤 Tradutor"
-            android:textSize="14sp"
+            android:text="🔤 Tradutor Offline"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"/>
 
@@ -33,47 +33,91 @@
             android:textColor="#AAFFFFFF"/>
     </LinearLayout>
 
-    <!-- Last Translation -->
-    <TextView
-        android:id="@+id/txtLastTranslation"
+    <!-- Last Translation Display -->
+    <LinearLayout
+        android:id="@+id/translationContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:orientation="vertical"
         android:gravity="center"
-        android:text="Toque para traduzir"
-        android:textSize="16sp"
-        android:textColor="#FFFFFF"
-        android:maxLines="2"
-        android:ellipsize="end"
-        android:layout_marginVertical="8dp"/>
+        android:layout_marginVertical="8dp"
+        android:padding="8dp"
+        android:background="#22FFFFFF">
 
-    <!-- Quick Languages -->
+        <TextView
+            android:id="@+id/txtSourceText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Texto original"
+            android:textSize="11sp"
+            android:textColor="#AAAAAA"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/txtLastTranslation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Toque para traduzir"
+            android:textSize="15sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+
+    <!-- Quick Action Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center">
 
-        <Button
+        <ImageButton
+            android:id="@+id/btnCamera"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_camera"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:contentDescription="Câmera"/>
+
+        <ImageButton
+            android:id="@+id/btnText"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_edit"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:contentDescription="Texto"
+            android:layout_marginStart="8dp"/>
+
+        <ImageButton
             android:id="@+id/btnSwap"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:text="⇄"
-            android:textSize="16sp"
-            android:paddingHorizontal="12dp"
-            style="@style/Widget.Material3.Button.TonalButton"/>
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:contentDescription="Trocar idiomas"
+            android:layout_marginStart="8dp"/>
 
         <View
-            android:layout_width="8dp"
-            android:layout_height="1dp"/>
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/btnOpen"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="32dp"
-            android:layout_weight="1"
-            android:text="Abrir App"
-            android:textSize="12sp"
+            android:text="App"
+            android:textSize="11sp"
+            android:paddingHorizontal="16dp"
             style="@style/Widget.Material3.Button.TonalButton"/>
     </LinearLayout>
 
