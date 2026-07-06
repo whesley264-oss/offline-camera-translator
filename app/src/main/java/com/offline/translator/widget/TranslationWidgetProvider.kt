@@ -140,6 +140,10 @@ class TranslationWidgetProvider : AppWidgetProvider() {
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
         
+        fun updateLastTranslation(context: Context, translatedText: String) {
+            updateLastTranslation(context, "", translatedText)
+        }
+
         fun updateLastTranslation(context: Context, sourceText: String, translatedText: String) {
             context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
                 .edit()
