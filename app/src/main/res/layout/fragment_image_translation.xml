@@ -174,13 +174,23 @@
         android:paddingBottom="16dp">
 
         <ImageButton
+            android:id="@+id/btnGallery"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:src="@android:drawable/ic_menu_gallery"
+            android:background="@drawable/btn_capture"
+            android:padding="12dp"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Escolher da galeria"/>
+
+        <ImageButton
             android:id="@+id/btnSelectArea"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:src="@android:drawable/ic_menu_crop"
             android:background="@drawable/btn_capture"
             android:padding="12dp"
-            android:layout_marginEnd="24dp"/>
+            android:layout_marginEnd="16dp"/>
 
         <ImageButton
             android:id="@+id/btnCapture"

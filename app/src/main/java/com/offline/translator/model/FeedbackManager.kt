@@ -30,8 +30,9 @@ class FeedbackManager(private val context: Context, private val prefs: Preferenc
         
         vibrator?.let { v ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // Short double tap pattern
-                v.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+                // Use createWaveform for maximum compatibility (0 delay, vibrate once, no repeat)
+                val timings = longArrayOf(0, 30)
+                v.vibrate(VibrationEffect.createWaveform(timings, -1))
             } else {
                 @Suppress("DEPRECATION")
                 v.vibrate(30)
@@ -47,7 +48,9 @@ class FeedbackManager(private val context: Context, private val prefs: Preferenc
         
         vibrator?.let { v ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+                // Slightly longer vibration for error feedback
+                val timings = longArrayOf(0, 100)
+                v.vibrate(VibrationEffect.createWaveform(timings, -1))
             } else {
                 @Suppress("DEPRECATION")
                 v.vibrate(100)
