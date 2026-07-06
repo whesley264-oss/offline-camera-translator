@@ -10,6 +10,7 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.offline.translator.R
 import com.offline.translator.model.PreferencesManager
+import com.offline.translator.model.TranslationService
 import com.offline.translator.view.MainActivity
 import kotlinx.coroutines.*
 
@@ -17,7 +18,6 @@ class ClipboardTranslationService : Service() {
     
     private lateinit var clipboardManager: ClipboardManager
     private lateinit var translationService: TranslationService
-    private lateinit var textRecognitionService: TextRecognitionService
     private lateinit var preferencesManager: PreferencesManager
     
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -46,7 +46,6 @@ class ClipboardTranslationService : Service() {
         createNotificationChannel()
         clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         translationService = TranslationService(this)
-        textRecognitionService = TextRecognitionService()
         preferencesManager = PreferencesManager(this)
         
         clipboardManager.addPrimaryClipChangedListener(clipboardListener)
