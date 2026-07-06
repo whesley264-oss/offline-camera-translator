@@ -53,6 +53,8 @@ class ImageTranslationFragment : Fragment() {
     private var selectedTarget = "pt"
     private var lastDetectedText: String = ""
     private var lastTranslatedText: String = ""
+    private var currentBitmap: Bitmap? = null
+    private var isShowingGalleryImage = false
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else Toast.makeText(context, "Permissão de câmera negada", Toast.LENGTH_SHORT).show()
@@ -96,6 +98,8 @@ class ImageTranslationFragment : Fragment() {
         
         binding.btnCapture.setOnClickListener {
             feedbackManager.animatePulse(it)
+            // Reset to camera mode
+            resetToCameraMode()
             captureAndTranslate()
         }
         
@@ -155,6 +159,16 @@ class ImageTranslationFragment : Fragment() {
         galleryLauncher.launch("image/*")
     }
 
+    private fun resetToCameraMode() {
+        isShowingGalleryImage = false
+        currentBitmap = null
+        binding.imagePreview.visibility = View.GONE
+        binding.viewFinder.visibility = View.VISIBLE
+        binding.translatedTextOverlay.visibility = View.GONE
+        binding.txtResult.visibility = View.GONE
+        binding.selectionOverlay.visibility = View.GONE
+    }
+
     private fun processImageFromUri(uri: Uri) {
         val sourcePos = binding.spinnerSource.selectedItemPosition
         val targetPos = binding.spinnerTarget.selectedItemPosition
@@ -170,6 +184,7 @@ class ImageTranslationFragment : Fragment() {
         
         binding.progressBar.visibility = View.VISIBLE
         binding.txtResult.visibility = View.GONE
+        binding.translatedTextOverlay.visibility = View.GONE
         
         scope.launch {
             try {
@@ -177,6 +192,16 @@ class ImageTranslationFragment : Fragment() {
                 inputStream?.use { stream ->
                     val bitmap = BitmapFactory.decodeStream(stream)
                     if (bitmap != null) {
+                        // Save bitmap and show in preview
+                        currentBitmap = bitmap
+                        isShowingGalleryImage = true
+                        
+                        // Hide camera, show image
+                        binding.viewFinder.visibility = View.GONE
+                        binding.imagePreview.visibility = View.VISIBLE
+                        binding.imagePreview.setImageBitmap(bitmap)
+                        binding.selectionOverlay.visibility = View.GONE
+                        
                         processImage(bitmap)
                     } else {
                         binding.progressBar.visibility = View.GONE
@@ -310,7 +335,7 @@ class ImageTranslationFragment : Fragment() {
         scope.launch {
             try {
                 val rect = binding.selectionOverlay.getSelectionRect()
-                val finalBitmap = if (rect.width() > 50 && rect.height() > 50) {
+                val finalBitmap = if (rect.width() > 50 && rect.height() > 50 && !isShowingGalleryImage) {
                     val scaleX = bitmap.width.toFloat() / binding.viewFinder.width
                     val scaleY = bitmap.height.toFloat() / binding.viewFinder.height
                     Bitmap.createBitmap(bitmap, 
@@ -336,11 +361,17 @@ class ImageTranslationFragment : Fragment() {
                         translateResult.fold(
                             onSuccess = { translated ->
                                 lastTranslatedText = translated
+                                
+                                // Show translated text on image overlay
+                                binding.txtTranslatedText.text = translated
+                                binding.translatedTextOverlay.visibility = View.VISIBLE
+                                feedbackManager.animateSlideUp(binding.translatedTextOverlay)
+                                
+                                // Also update the bottom card text
                                 binding.txtResult.text = translated
                                 binding.txtResult.visibility = View.VISIBLE
                                 
                                 feedbackManager.vibrateOnTranslate()
-                                feedbackManager.animateSlideUp(binding.txtResult)
                                 
                                 try {
                                     val recordId = statsManager.saveTranslation(
