@@ -95,11 +95,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
+            <ImageView
+                android:id="@+id/imagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:visibility="gone"/>
+
             <com.offline.translator.view.SelectionOverlayView
                 android:id="@+id/selectionOverlay"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="gone"/>
+
+            <!-- Translated Text Overlay -->
+            <LinearLayout
+                android:id="@+id/translatedTextOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="vertical"
+                android:background="#CC1E1E1E"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/txtTranslatedLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tradução:"
+                    android:textColor="#4CAF50"
+                    android:textSize="12sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/txtTranslatedText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:maxLines="5"
+                    android:ellipsize="end"/>
+            </LinearLayout>
         </FrameLayout>
     </androidx.cardview.widget.CardView>
 
