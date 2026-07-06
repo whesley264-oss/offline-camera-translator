@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -25,6 +27,7 @@ import com.offline.translator.R
 import com.offline.translator.databinding.FragmentImageTranslationBinding
 import com.offline.translator.model.*
 import kotlinx.coroutines.*
+import java.io.InputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -53,6 +56,10 @@ class ImageTranslationFragment : Fragment() {
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else Toast.makeText(context, "Permissão de câmera negada", Toast.LENGTH_SHORT).show()
+    }
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { processImageFromUri(it) }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -90,6 +97,11 @@ class ImageTranslationFragment : Fragment() {
         binding.btnCapture.setOnClickListener {
             feedbackManager.animatePulse(it)
             captureAndTranslate()
+        }
+        
+        binding.btnGallery.setOnClickListener {
+            feedbackManager.animatePulse(it)
+            openGallery()
         }
         
         binding.btnSelectArea.setOnClickListener {
@@ -136,6 +148,48 @@ class ImageTranslationFragment : Fragment() {
             Toast.makeText(context, "🔊 Reproduzindo...", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, "TTS não disponível", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openGallery() {
+        galleryLauncher.launch("image/*")
+    }
+
+    private fun processImageFromUri(uri: Uri) {
+        val sourcePos = binding.spinnerSource.selectedItemPosition
+        val targetPos = binding.spinnerTarget.selectedItemPosition
+        
+        if (sourcePos < 0 || sourcePos >= downloadedLanguages.size ||
+            targetPos < 0 || targetPos >= downloadedLanguages.size) {
+            Toast.makeText(context, "Selecione os idiomas", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        selectedSource = downloadedLanguages[sourcePos].code
+        selectedTarget = downloadedLanguages[targetPos].code
+        
+        binding.progressBar.visibility = View.VISIBLE
+        binding.txtResult.visibility = View.GONE
+        
+        scope.launch {
+            try {
+                val inputStream: InputStream? = requireContext().contentResolver.openInputStream(uri)
+                inputStream?.use { stream ->
+                    val bitmap = BitmapFactory.decodeStream(stream)
+                    if (bitmap != null) {
+                        processImage(bitmap)
+                    } else {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(context, "Não foi possível carregar a imagem", Toast.LENGTH_SHORT).show()
+                    }
+                } ?: run {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(context, "Erro ao abrir imagem", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
     
