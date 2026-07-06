@@ -4,13 +4,36 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,54m-26,0a26,26 0,1 1,52 0a26,26 0,1 1,-52 0"/>
+    <!-- Background circle -->
     <path
         android:fillColor="#2196F3"
-        android:pathData="M54,40L54,54L68,54A14,14 0,1 1,54 40z"/>
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"/>
+    
+    <!-- Camera body -->
     <path
-        android:fillColor="#1976D2"
-        android:pathData="M40,54A14,14 0,0 1,54 40L54,54z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,42L44,62A2,2 0,0 0,46 64L62,64A2,2 0,0 0,64 62L64,42A2,2 0,0 0,62 40L46,40A2,2 0,0 0,44 42z"/>
+    
+    <!-- Camera lens outer -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M54,48m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0"/>
+    
+    <!-- Camera lens inner -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,48m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"/>
+    
+    <!-- Translation arrows -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M36,54L30,48L30,52L28,52L28,56L30,56L30,60L36,54z"/>
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M72,54L78,60L78,56L80,56L80,52L78,52L78,48L72,54z"/>
+    
+    <!-- Text indicator -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,68L52,68L52,74L50,74L50,72L48,72L48,74L48,68zM53,68L55,68L55,70L57,70L57,68L59,68L59,74L53,74L53,68zM60,68L60,72L62,72L62,68L64,68L64,74L62,74L62,74L60,74L60,68z"/>
 </vector>

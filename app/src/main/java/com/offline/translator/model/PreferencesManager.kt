@@ -12,6 +12,9 @@ class PreferencesManager(context: Context) {
 
     fun getFontSize(): Int = prefs.getInt(KEY_FONT_SIZE, 1)
     fun setFontSize(size: Int) = prefs.edit { putInt(KEY_FONT_SIZE, size) }
+    
+    fun getFontFamily(): String = prefs.getString(KEY_FONT_FAMILY, "default") ?: "default"
+    fun setFontFamily(family: String) = prefs.edit { putString(KEY_FONT_FAMILY, family) }
 
     fun isAutoDetect(): Boolean = prefs.getBoolean(KEY_AUTO_DETECT, true)
     fun setAutoDetect(enabled: Boolean) = prefs.edit { putBoolean(KEY_AUTO_DETECT, enabled) }
@@ -24,6 +27,12 @@ class PreferencesManager(context: Context) {
 
     fun isClipboardTranslationEnabled(): Boolean = prefs.getBoolean(KEY_CLIPBOARD_TRANSLATION, false)
     fun setClipboardTranslation(enabled: Boolean) = prefs.edit { putBoolean(KEY_CLIPBOARD_TRANSLATION, enabled) }
+    
+    fun isNotificationSoundEnabled(): Boolean = prefs.getBoolean(KEY_NOTIFICATION_SOUND, true)
+    fun setNotificationSound(enabled: Boolean) = prefs.edit { putBoolean(KEY_NOTIFICATION_SOUND, enabled) }
+    
+    fun isNotificationVibrateEnabled(): Boolean = prefs.getBoolean(KEY_NOTIFICATION_VIBRATE, true)
+    fun setNotificationVibrate(enabled: Boolean) = prefs.edit { putBoolean(KEY_NOTIFICATION_VIBRATE, enabled) }
 
     fun getSourceLanguage(): String = prefs.getString(KEY_SOURCE_LANG, "en") ?: "en"
     fun setSourceLanguage(code: String) = prefs.edit { putString(KEY_SOURCE_LANG, code) }
@@ -38,10 +47,13 @@ class PreferencesManager(context: Context) {
         private const val PREFS_NAME = "translator_prefs"
         private const val KEY_DARK_MODE = "dark_mode"
         private const val KEY_FONT_SIZE = "font_size"
+        private const val KEY_FONT_FAMILY = "font_family"
         private const val KEY_AUTO_DETECT = "auto_detect"
         private const val KEY_HAPTIC = "haptic"
         private const val KEY_ANIMATIONS = "animations"
         private const val KEY_CLIPBOARD_TRANSLATION = "clipboard_translation"
+        private const val KEY_NOTIFICATION_SOUND = "notification_sound"
+        private const val KEY_NOTIFICATION_VIBRATE = "notification_vibrate"
         private const val KEY_SOURCE_LANG = "source_lang"
         private const val KEY_TARGET_LANG = "target_lang"
         private const val KEY_FIRST_LAUNCH = "first_launch"

@@ -57,46 +57,69 @@
         android:maxLines="4"
         android:ellipsize="end"/>
 
-    <!-- Action Buttons -->
+    <!-- Action Buttons Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:orientation="horizontal"
-        android:gravity="center">
+        android:gravity="center_vertical">
 
-        <Button
+        <ImageButton
             android:id="@+id/btnCopy"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="📋 Copiar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_save"
+            android:background="@android:drawable/btn_default"
+            android:contentDescription="Copiar"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Copiar"
             android:textSize="12sp"
-            style="@style/Widget.Material3.Button.TonalButton"/>
+            android:textColor="#FFFFFF"/>
 
         <View
-            android:layout_width="8dp"
+            android:layout_width="16dp"
             android:layout_height="1dp"/>
 
-        <Button
+        <ImageButton
             android:id="@+id/btnSwap"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:background="@android:drawable/btn_default"
+            android:contentDescription="Trocar"/>
+
+        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:text="⇄ Trocar"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Trocar"
             android:textSize="12sp"
-            style="@style/Widget.Material3.Button.TonalButton"/>
+            android:textColor="#FFFFFF"/>
 
         <View
-            android:layout_width="8dp"
+            android:layout_width="16dp"
             android:layout_height="1dp"/>
 
-        <Button
+        <ImageButton
             android:id="@+id/btnOpen"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_view"
+            android:background="@android:drawable/btn_default"
+            android:contentDescription="Abrir app"/>
+
+        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:text="App"
             android:textSize="12sp"
-            style="@style/Widget.Material3.Button.TonalButton"/>
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 
 </LinearLayout>

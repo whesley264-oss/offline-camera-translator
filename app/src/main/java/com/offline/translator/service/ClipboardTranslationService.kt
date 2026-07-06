@@ -6,6 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.offline.translator.R
@@ -15,26 +18,27 @@ import com.offline.translator.view.MainActivity
 import kotlinx.coroutines.*
 
 class ClipboardTranslationService : Service() {
-    
+
     private lateinit var clipboardManager: ClipboardManager
     private lateinit var translationService: TranslationService
     private lateinit var preferencesManager: PreferencesManager
-    
+    private lateinit var vibrator: Vibrator
+
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    
+
     private var lastClipboardText: String = ""
     private var isProcessing = false
-    
+
     companion object {
         const val CHANNEL_ID = "pelko_clipboard_channel"
         const val NOTIFICATION_ID = 1001
         const val FOREGROUND_NOTIFICATION_ID = 1000
-        
+
         const val ACTION_TRANSLATE = "com.offline.translator.ACTION_TRANSLATE"
         const val ACTION_COPY_RESULT = "com.offline.translator.ACTION_COPY_RESULT"
         const val ACTION_SWAP = "com.offline.translator.ACTION_SWAP"
         const val ACTION_STOP = "com.offline.translator.ACTION_STOP"
-        
+
         var isRunning = false
             private set
     }
@@ -42,42 +46,69 @@ class ClipboardTranslationService : Service() {
     override fun onCreate() {
         super.onCreate()
         isRunning = true
-        
+
         createNotificationChannel()
         clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         translationService = TranslationService(this)
         preferencesManager = PreferencesManager(this)
         
+        // Initialize vibrator
+        vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+
         clipboardManager.addPrimaryClipChangedListener(clipboardListener)
-        
+
         // Show foreground notification
         showForegroundNotification()
     }
-    
+
+    private fun vibrate() {
+        if (preferencesManager.isHapticEnabled() && vibrator.hasVibrator()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(100)
+            }
+        }
+    }
+
     private fun showForegroundNotification() {
         val view = RemoteViews(packageName, R.layout.notification_translation_collapsed).apply {
             setTextViewText(R.id.txtTitle, "🔤 Copiar & Traduzir ativo")
             setTextViewText(R.id.txtSource, "Copie qualquer texto para traduzir")
             setTextViewText(R.id.txtLanguages, "")
         }
-        
+
+        val openIntent = Intent(this, MainActivity::class.java)
+        val openPendingIntent = PendingIntent.getActivity(
+            this, 0, openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val stopIntent = Intent(this, ClipboardTranslationService::class.java).apply {
             action = ACTION_STOP
         }
         val stopPendingIntent = PendingIntent.getService(
-            this, 0, stopIntent,
+            this, 1, stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setCustomContentView(view)
+            .setContentIntent(openPendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .addAction(R.drawable.ic_notification, "Parar", stopPendingIntent)
             .build()
-        
+
         startForeground(FOREGROUND_NOTIFICATION_ID, notification)
     }
 
@@ -92,7 +123,7 @@ class ClipboardTranslationService : Service() {
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
-            
+
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
@@ -100,7 +131,7 @@ class ClipboardTranslationService : Service() {
 
     private val clipboardListener = ClipboardManager.OnPrimaryClipChangedListener {
         if (isProcessing) return@OnPrimaryClipChangedListener
-        
+
         val clip = clipboardManager.primaryClip
         if (clip != null && clip.itemCount > 0) {
             val text = clip.getItemAt(0).text?.toString()
@@ -113,18 +144,19 @@ class ClipboardTranslationService : Service() {
 
     private fun translateAndNotify(text: String) {
         isProcessing = true
-        
+
         val source = preferencesManager.getSourceLanguage()
         val target = preferencesManager.getTargetLanguage()
-        
+
         // Show "translating" notification first
         showTranslatingNotification(text, source, target)
-        
+
         scope.launch {
             try {
                 val result = translationService.translate(text, source, target)
                 result.fold(
                     onSuccess = { translated ->
+                        vibrate() // Vibrate on successful translation
                         showTranslationNotification(text, translated, source, target)
                     },
                     onFailure = {
@@ -144,7 +176,7 @@ class ClipboardTranslationService : Service() {
             setTextViewText(R.id.txtSource, text.take(50) + if (text.length > 50) "..." else "")
             setTextViewText(R.id.txtLanguages, "${source.uppercase()} → ${target.uppercase()}")
         }
-        
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setCustomContentView(collapsedView)
@@ -152,7 +184,7 @@ class ClipboardTranslationService : Service() {
             .setOngoing(false)
             .setOnlyAlertOnce(true)
             .build()
-        
+
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
@@ -163,14 +195,14 @@ class ClipboardTranslationService : Service() {
             setTextViewText(R.id.txtSource, sourceText.take(50) + if (sourceText.length > 50) "..." else "")
             setTextViewText(R.id.txtLanguages, "${source.uppercase()} → ${target.uppercase()}")
         }
-        
+
         val expandedView = RemoteViews(packageName, R.layout.notification_translation_expanded).apply {
             setTextViewText(R.id.txtTitle, "🔤 ${source.uppercase()} → ${target.uppercase()}")
             setTextViewText(R.id.txtSourceLabel, "Original:")
             setTextViewText(R.id.txtSource, sourceText)
             setTextViewText(R.id.txtResultLabel, "Tradução:")
             setTextViewText(R.id.txtResult, translatedText)
-            
+
             // Set click intents
             val copyIntent = Intent(this@ClipboardTranslationService, ClipboardTranslationService::class.java).apply {
                 action = ACTION_COPY_RESULT
@@ -181,7 +213,7 @@ class ClipboardTranslationService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             setOnClickPendingIntent(R.id.btnCopy, copyPendingIntent)
-            
+
             val swapIntent = Intent(this@ClipboardTranslationService, ClipboardTranslationService::class.java).apply {
                 action = ACTION_SWAP
             }
@@ -190,7 +222,7 @@ class ClipboardTranslationService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             setOnClickPendingIntent(R.id.btnSwap, swapPendingIntent)
-            
+
             val openIntent = Intent(this@ClipboardTranslationService, MainActivity::class.java)
             val openPendingIntent = PendingIntent.getActivity(
                 this@ClipboardTranslationService, 2, openIntent,
@@ -198,7 +230,7 @@ class ClipboardTranslationService : Service() {
             )
             setOnClickPendingIntent(R.id.btnOpen, openPendingIntent)
         }
-        
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setCustomContentView(collapsedView)
@@ -215,7 +247,7 @@ class ClipboardTranslationService : Service() {
                 )
             )
             .build()
-        
+
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
@@ -226,7 +258,7 @@ class ClipboardTranslationService : Service() {
             setTextViewText(R.id.txtSource, "Baixe os idiomas na Biblioteca")
             setTextViewText(R.id.txtLanguages, "")
         }
-        
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setCustomContentView(view)
@@ -234,7 +266,7 @@ class ClipboardTranslationService : Service() {
             .setOngoing(false)
             .setAutoCancel(true)
             .build()
-        
+
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
@@ -261,15 +293,18 @@ class ClipboardTranslationService : Service() {
     private fun copyToClipboard(text: String) {
         val clip = android.content.ClipData.newPlainText("Tradução Pelko", text)
         clipboardManager.setPrimaryClip(clip)
-        
-        // Show brief toast
+
+        // Vibrate on copy
+        vibrate()
+
+        // Show brief toast notification
         val toastNotification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("✓ Tradução copiada!")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setAutoCancel(true)
             .build()
-        
+
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(NOTIFICATION_ID + 1, toastNotification)
     }
