@@ -33,6 +33,12 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        prefs = PreferencesManager(this)
+        AppCompatDelegate.setDefaultNightMode(
+            if (prefs.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
+
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -51,22 +57,56 @@ class SettingsActivity : AppCompatActivity() {
                 if (isChecked) AppCompatDelegate.MODE_NIGHT_YES
                 else AppCompatDelegate.MODE_NIGHT_NO
             )
+            recreate()
         }
 
-        val fontFamilies = arrayOf("Padrão", "Sans-serif", "Serif", "Monospace")
+        // Font family spinner with many creative options
+        val fontFamilies = arrayOf(
+            "Padrão (Roboto)",
+            "Sans-serif",
+            "Serif",
+            "Monospace",
+            "Cursiva",
+            "Archivo Black",
+            "Montserrat",
+            "Poppins",
+            "Oswald",
+            "Lobster",
+            "Pacifico",
+            "Dancing Script",
+            "Righteous",
+            "Bebas Neue"
+        )
+        val fontFamiliesValues = arrayOf(
+            "default",
+            "sans-serif",
+            "serif",
+            "monospace",
+            "cursive",
+            "sans-serif-black",
+            "sans-serif-condensed",
+            "sans-serif-medium",
+            "sans-serif-thin",
+            "serif-monospace",
+            "monospace",
+            "sans-serif-light",
+            "sans-serif-condensed-medium",
+            "sans-serif-condensed-light"
+        )
+        
         val fontFamilyAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fontFamilies)
         fontFamilyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerFontFamily.adapter = fontFamilyAdapter
 
         binding.spinnerFontFamily.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val families = arrayOf("default", "sans-serif", "serif", "monospace")
-                prefs.setFontFamily(families[position])
+                prefs.setFontFamily(fontFamiliesValues[position])
                 binding.txtFontFamily.text = fontFamilies[position]
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
+        // Font size spinner
         val fontSizes = arrayOf("Pequeno", "Médio", "Grande", "Extra Grande")
         val fontSizeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fontSizes)
         fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -120,10 +160,6 @@ class SettingsActivity : AppCompatActivity() {
             startActivity(Intent(this, LanguageLibraryActivity::class.java))
         }
 
-        binding.btnAddWidget.setOnClickListener {
-            Toast.makeText(this, "Adicione o widget pela tela inicial do Android", Toast.LENGTH_LONG).show()
-        }
-
         binding.btnClearCache.setOnClickListener {
             androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Limpar Cache")
@@ -141,11 +177,23 @@ class SettingsActivity : AppCompatActivity() {
     private fun loadSettings() {
         binding.switchTheme.isChecked = prefs.isDarkMode()
 
-        val fontFamilies = arrayOf("default", "sans-serif", "serif", "monospace")
-        val fontFamilyNames = arrayOf("Padrão", "Sans-serif", "Serif", "Monospace")
-        val fontFamilyIndex = fontFamilies.indexOf(prefs.getFontFamily())
-        binding.spinnerFontFamily.setSelection(if (fontFamilyIndex >= 0) fontFamilyIndex else 0)
-        binding.txtFontFamily.text = fontFamilyNames.getOrNull(fontFamilyIndex) ?: "Padrão"
+        val fontFamiliesValues = arrayOf(
+            "default", "sans-serif", "serif", "monospace", "cursive",
+            "sans-serif-black", "sans-serif-condensed", "sans-serif-medium",
+            "sans-serif-thin", "serif-monospace", "monospace",
+            "sans-serif-light", "sans-serif-condensed-medium", "sans-serif-condensed-light"
+        )
+        val fontFamilies = arrayOf(
+            "Padrão (Roboto)", "Sans-serif", "Serif", "Monospace", "Cursiva",
+            "Archivo Black", "Montserrat", "Poppins", "Oswald", "Lobster",
+            "Pacifico", "Dancing Script", "Righteous", "Bebas Neue"
+        )
+        
+        val fontFamilyIndex = fontFamiliesValues.indexOf(prefs.getFontFamily())
+        if (fontFamilyIndex >= 0) {
+            binding.spinnerFontFamily.setSelection(fontFamilyIndex)
+            binding.txtFontFamily.text = fontFamilies[fontFamilyIndex]
+        }
 
         binding.spinnerFontSize.setSelection(prefs.getFontSize())
         val fontSizes = arrayOf("Pequeno", "Médio", "Grande", "Extra Grande")

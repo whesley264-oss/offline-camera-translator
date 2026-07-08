@@ -92,7 +92,7 @@
             android:background="@android:color/transparent"
             android:padding="16dp"
             android:hint="Digite o texto aqui..."
-            android:textColorHint="#666666"
+            android:textColorHint="#757575"
             android:textColor="#FFFFFF"
             android:gravity="top"
             android:inputType="textMultiLine"/>
@@ -123,7 +123,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            
+
             <EditText
                 android:id="@+id/editTextOutput"
                 android:layout_width="match_parent"
@@ -132,10 +132,12 @@
                 android:padding="16dp"
                 android:paddingEnd="140dp"
                 android:hint="Tradução aparecerá aqui"
-                android:textColorHint="#666666"
-                android:textColor="#4CAF50"
+                android:textColorHint="#757575"
+                android:textColor="#81C784"
                 android:gravity="top"
-                android:inputType="textMultiLine"/>
+                android:inputType="textMultiLine"
+                android:focusable="false"
+                android:clickable="true"/>
 
             <!-- Action Buttons -->
             <LinearLayout

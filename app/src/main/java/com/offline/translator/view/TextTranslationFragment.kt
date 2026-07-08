@@ -9,7 +9,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ImageButton
@@ -64,7 +63,6 @@ class TextTranslationFragment : Fragment() {
             selectedSource = selectedTarget
             selectedTarget = temp
             updateSpinnerSelections()
-            feedbackManager.animatePulse(it)
             Toast.makeText(context, "Idiomas trocados!", Toast.LENGTH_SHORT).show()
         }
 
@@ -109,7 +107,6 @@ class TextTranslationFragment : Fragment() {
 
         binding.btnTranslate.setOnClickListener {
             if (!isTranslating) {
-                feedbackManager.animatePulse(it)
                 translateText()
             }
         }
@@ -237,6 +234,8 @@ class TextTranslationFragment : Fragment() {
             return
         }
 
+        Log.d(TAG, "Translating: $inputText from $selectedSource to $selectedTarget")
+
         isTranslating = true
         binding.btnTranslate.isEnabled = false
         binding.btnTranslate.text = "Traduzindo..."
@@ -253,10 +252,10 @@ class TextTranslationFragment : Fragment() {
 
                 result.fold(
                     onSuccess = { translated ->
+                        Log.d(TAG, "Translation result: $translated")
                         withContext(Dispatchers.Main) {
                             binding.editTextOutput.setText(translated)
-                            feedbackManager.vibrateOnTranslate()
-                            feedbackManager.animateSuccess(binding.editTextOutput)
+                            Toast.makeText(context, "✓ Tradução completa!", Toast.LENGTH_SHORT).show()
                         }
 
                         TranslationWidgetProvider.updateLastTranslation(requireContext(), inputText, translated)
@@ -268,104 +267,25 @@ class TextTranslationFragment : Fragment() {
                             historyManager.saveTranslation(
                                 inputText, translated, selectedSource, selectedTarget, "text"
                             )
-                            showRatingDialog(recordId)
                         } catch (e: Exception) {
                             Log.e(TAG, "Error saving: ${e.message}")
                         }
                     },
                     onFailure = { e ->
+                        Log.e(TAG, "Translation failed: ${e.message}")
                         withContext(Dispatchers.Main) {
                             Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-                            feedbackManager.vibrateOnError()
                         }
                     }
                 )
             } catch (e: Exception) {
+                Log.e(TAG, "Exception: ${e.message}")
                 withContext(Dispatchers.Main) {
                     isTranslating = false
                     binding.btnTranslate.isEnabled = true
                     binding.btnTranslate.text = "TRADUZIR"
                     Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
                 }
-            }
-        }
-    }
-
-    private fun showRatingDialog(recordId: Long) {
-        if (context == null) return
-
-        try {
-            val dialogView = layoutInflater.inflate(R.layout.dialog_rating, null)
-            val dialog = android.app.AlertDialog.Builder(context)
-                .setView(dialogView)
-                .setCancelable(true)
-                .create()
-
-            var currentRating = 0
-            val stars = listOf(
-                dialogView.findViewById<ImageButton>(R.id.star1),
-                dialogView.findViewById<ImageButton>(R.id.star2),
-                dialogView.findViewById<ImageButton>(R.id.star3),
-                dialogView.findViewById<ImageButton>(R.id.star4),
-                dialogView.findViewById<ImageButton>(R.id.star5)
-            )
-            val txtLabel = dialogView.findViewById<android.widget.TextView>(R.id.txtRatingLabel)
-
-            fun updateStars(rating: Int) {
-                currentRating = rating
-                stars.forEachIndexed { index, star ->
-                    star.setImageResource(if (index < rating) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off)
-                }
-                txtLabel.text = when (rating) {
-                    1 -> "Muito ruim"
-                    2 -> "Ruim"
-                    3 -> "Regular"
-                    4 -> "Bom"
-                    5 -> "Excelente!"
-                    else -> "Toque para avaliar"
-                }
-            }
-
-            stars.forEachIndexed { index, star ->
-                star.setOnClickListener {
-                    updateStars(index + 1)
-                    if (currentRating > 0) {
-                        val rating = when (currentRating) {
-                            5 -> TranslationRating.EXCELLENT
-                            4 -> TranslationRating.GOOD
-                            3 -> TranslationRating.AVERAGE
-                            2 -> TranslationRating.POOR
-                            else -> TranslationRating.BAD
-                        }
-                        statsManager.rateTranslation(recordId, rating)
-                        syncWithGitHub()
-                        dialog.dismiss()
-                    }
-                }
-            }
-
-            dialogView.findViewById<View>(R.id.btnSkip).setOnClickListener {
-                dialog.dismiss()
-            }
-
-            dialog.show()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error showing dialog: ${e.message}")
-        }
-    }
-
-    private fun syncWithGitHub() {
-        scope.launch {
-            try {
-                val pending = githubSync.getPendingCount()
-                if (pending > 0) {
-                    val result = githubSync.syncWithGitHub()
-                    result.onSuccess {
-                        Toast.makeText(context, "✓ Sincronizado!", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Sync error: ${e.message}")
             }
         }
     }
