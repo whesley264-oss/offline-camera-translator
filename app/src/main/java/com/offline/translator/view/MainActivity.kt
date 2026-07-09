@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: PreferencesManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Apply saved theme FIRST
         prefs = PreferencesManager(this)
         AppCompatDelegate.setDefaultNightMode(
             if (prefs.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES
@@ -43,5 +44,16 @@ class MainActivity : AppCompatActivity() {
                 else -> ""
             }
         }.attach()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Check if theme changed
+        if (::prefs.isInitialized) {
+            val expectedMode = if (prefs.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+            if (AppCompatDelegate.getDefaultNightMode() != expectedMode) {
+                recreate()
+            }
+        }
     }
 }

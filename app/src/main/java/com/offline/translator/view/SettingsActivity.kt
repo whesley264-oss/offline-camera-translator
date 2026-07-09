@@ -53,11 +53,9 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.switchTheme.setOnCheckedChangeListener { _, isChecked ->
             prefs.setDarkMode(isChecked)
-            AppCompatDelegate.setDefaultNightMode(
-                if (isChecked) AppCompatDelegate.MODE_NIGHT_YES
-                else AppCompatDelegate.MODE_NIGHT_NO
-            )
-            recreate()
+            // Restart the activity to apply theme
+            finish()
+            startActivity(intent)
         }
 
         // Font family spinner with many creative options
@@ -78,20 +76,10 @@ class SettingsActivity : AppCompatActivity() {
             "Bebas Neue"
         )
         val fontFamiliesValues = arrayOf(
-            "default",
-            "sans-serif",
-            "serif",
-            "monospace",
-            "cursive",
-            "sans-serif-black",
-            "sans-serif-condensed",
-            "sans-serif-medium",
-            "sans-serif-thin",
-            "serif-monospace",
-            "monospace",
-            "sans-serif-light",
-            "sans-serif-condensed-medium",
-            "sans-serif-condensed-light"
+            "default", "sans-serif", "serif", "monospace", "cursive",
+            "sans-serif-black", "sans-serif-condensed", "sans-serif-medium",
+            "sans-serif-thin", "serif-monospace", "monospace",
+            "sans-serif-light", "sans-serif-condensed-medium", "sans-serif-condensed-light"
         )
         
         val fontFamilyAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fontFamilies)
@@ -122,14 +110,17 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.switchNotificationSound.setOnCheckedChangeListener { _, isChecked ->
             prefs.setNotificationSound(isChecked)
+            Toast.makeText(this, if (isChecked) "Som ativado" else "Som desativado", Toast.LENGTH_SHORT).show()
         }
 
         binding.switchNotificationVibrate.setOnCheckedChangeListener { _, isChecked ->
             prefs.setNotificationVibrate(isChecked)
+            Toast.makeText(this, if (isChecked) "Vibração ativada" else "Vibração desativada", Toast.LENGTH_SHORT).show()
         }
 
         binding.switchAnimations.setOnCheckedChangeListener { _, isChecked ->
             prefs.setAnimations(isChecked)
+            Toast.makeText(this, if (isChecked) "Animações ativadas" else "Animações desativadas", Toast.LENGTH_SHORT).show()
         }
 
         binding.switchClipboard.setOnCheckedChangeListener { _, isChecked ->
@@ -142,14 +133,17 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 prefs.setClipboardTranslation(true)
                 startClipboardService()
+                Toast.makeText(this, "Copiar & Traduzir ativado", Toast.LENGTH_SHORT).show()
             } else {
                 prefs.setClipboardTranslation(false)
                 stopClipboardService()
+                Toast.makeText(this, "Copiar & Traduzir desativado", Toast.LENGTH_SHORT).show()
             }
         }
 
         binding.switchAutoDetect.setOnCheckedChangeListener { _, isChecked ->
             prefs.setAutoDetect(isChecked)
+            Toast.makeText(this, if (isChecked) "Auto-detectar ativado" else "Auto-detectar desativado", Toast.LENGTH_SHORT).show()
         }
 
         if (prefs.isClipboardTranslationEnabled()) {
@@ -157,6 +151,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.btnLanguages.setOnClickListener {
+            Toast.makeText(this, "Abrindo Biblioteca de Idiomas...", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, LanguageLibraryActivity::class.java))
         }
 

@@ -10,12 +10,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.offline.translator.R
 import com.offline.translator.model.Language
 import com.offline.translator.model.LanguageDownloadManager
+import com.offline.translator.model.PreferencesManager
 import com.offline.translator.model.TranslationService
 import kotlinx.coroutines.launch
 
@@ -27,6 +29,12 @@ class LanguageLibraryActivity : AppCompatActivity() {
     private val languages = Language.SUPPORTED_LANGUAGES.toMutableList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = PreferencesManager(this)
+        AppCompatDelegate.setDefaultNightMode(
+            if (prefs.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
+        
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_language_library)
 
@@ -46,15 +54,14 @@ class LanguageLibraryActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val mlKitDownloaded = translationService.getDownloadedModels()
             val savedDownloaded = downloadManager.getDownloadedLanguages()
-            
-            // Combine both sources - ML Kit + saved downloads
-            val downloaded = (mlKitDownloaded + savedDownloaded).distinct()
-            
-            languages.forEachIndexed { index, lang ->
-                languages[index] = lang.copy(isDownloaded = downloaded.contains(lang.code))
+            val combinedDownloads = (mlKitDownloaded + savedDownloaded).toSet()
+
+            languages.forEach { lang ->
+                lang.isDownloaded = combinedDownloads.contains(lang.code)
             }
+
             progressBar.visibility = View.GONE
-            recyclerView.adapter = LanguageAdapter(languages) { language ->
+            recyclerView.adapter = LanguageAdapter(languages) { language, isDownloading ->
                 if (language.isDownloaded) {
                     showDeleteDialog(language)
                 } else {
@@ -65,85 +72,91 @@ class LanguageLibraryActivity : AppCompatActivity() {
     }
 
     private fun downloadLanguage(language: Language) {
-        val index = languages.indexOfFirst { it.code == language.code }
-        if (index >= 0) {
-            languages[index] = language.copy(isDownloading = true)
-            recyclerView.adapter?.notifyItemChanged(index)
+        language.isDownloading = true
+        recyclerView.adapter?.notifyDataSetChanged()
 
-            lifecycleScope.launch {
-                val result = translationService.downloadLanguage(language.code, Language.DEFAULT_TARGET)
-                val langIndex = languages.indexOfFirst { it.code == language.code }
-                if (langIndex >= 0) {
-                    languages[langIndex] = languages[langIndex].copy(isDownloading = false, isDownloaded = result.isSuccess)
-                    recyclerView.adapter?.notifyItemChanged(langIndex)
-                    if (result.isSuccess) {
-                        downloadManager.saveDownloadedLanguage(language.code)
-                        Toast.makeText(this@LanguageLibraryActivity, "${language.name} baixado!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@LanguageLibraryActivity, "Erro: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                    }
+        lifecycleScope.launch {
+            val result = translationService.downloadLanguage("en", language.code)
+            result.fold(
+                onSuccess = {
+                    language.isDownloaded = true
+                    language.isDownloading = false
+                    Toast.makeText(this@LanguageLibraryActivity, "✓ ${language.name} baixado!", Toast.LENGTH_SHORT).show()
+                },
+                onFailure = {
+                    language.isDownloading = false
+                    Toast.makeText(this@LanguageLibraryActivity, "Erro: ${it.message}", Toast.LENGTH_LONG).show()
                 }
-            }
+            )
+            recyclerView.adapter?.notifyDataSetChanged()
         }
     }
 
     private fun showDeleteDialog(language: Language) {
         AlertDialog.Builder(this)
-            .setTitle("Excluir Idioma")
-            .setMessage("Excluir ${language.name}?")
-            .setPositiveButton("Excluir") { _, _ ->
-                lifecycleScope.launch {
-                    translationService.deleteLanguage(language.code)
-                    downloadManager.removeDownloadedLanguage(language.code)
-                    val index = languages.indexOfFirst { it.code == language.code }
-                    if (index >= 0) {
-                        languages[index] = languages[index].copy(isDownloaded = false)
-                        recyclerView.adapter?.notifyItemChanged(index)
-                    }
-                }
+            .setTitle("Remover Idioma")
+            .setMessage("Deseja remover ${language.name}?")
+            .setPositiveButton("Remover") { _, _ ->
+                deleteLanguage(language)
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
-}
 
-class LanguageAdapter(
-    private val languages: List<Language>,
-    private val onItemClick: (Language) -> Unit
-) : RecyclerView.Adapter<LanguageAdapter.ViewHolder>() {
-
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val txtName: TextView = view.findViewById(R.id.txtLanguageName)
-        val txtStatus: TextView = view.findViewById(R.id.txtStatus)
-        val btnAction: Button = view.findViewById(R.id.btnAction)
-        val progress: ProgressBar = view.findViewById(R.id.progressDownload)
+    private fun deleteLanguage(language: Language) {
+        lifecycleScope.launch {
+            val result = translationService.deleteLanguage(language.code)
+            result.fold(
+                onSuccess = {
+                    language.isDownloaded = false
+                    Toast.makeText(this@LanguageLibraryActivity, "${language.name} removido", Toast.LENGTH_SHORT).show()
+                },
+                onFailure = {
+                    Toast.makeText(this@LanguageLibraryActivity, "Erro: ${it.message}", Toast.LENGTH_LONG).show()
+                }
+            )
+            recyclerView.adapter?.notifyDataSetChanged()
+        }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_language, parent, false)
-        return ViewHolder(view)
-    }
+    class LanguageAdapter(
+        private val languages: List<Language>,
+        private val onClick: (Language, Boolean) -> Unit
+    ) : RecyclerView.Adapter<LanguageAdapter.ViewHolder>() {
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val lang = languages[position]
-        holder.txtName.text = lang.name
-        holder.progress.visibility = if (lang.isDownloading) View.VISIBLE else View.GONE
-        holder.btnAction.visibility = if (lang.isDownloading) View.INVISIBLE else View.VISIBLE
-
-        if (lang.isDownloaded) {
-            holder.txtStatus.text = "Baixado"
-            holder.txtStatus.setTextColor(0xFF4CAF50.toInt())
-            holder.btnAction.text = "Remover"
-            holder.btnAction.setBackgroundResource(R.drawable.btn_delete)
-        } else {
-            holder.txtStatus.text = "Toque para baixar"
-            holder.txtStatus.setTextColor(0xFF666666.toInt())
-            holder.btnAction.text = "Baixar"
-            holder.btnAction.setBackgroundResource(R.drawable.btn_download)
+        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val nameText: TextView = view.findViewById(R.id.txtLanguageName)
+            val nativeText: TextView = view.findViewById(R.id.txtNativeName)
+            val downloadBtn: Button = view.findViewById(R.id.btnDownload)
+            val progressBar: ProgressBar = view.findViewById(R.id.progressBar)
         }
 
-        holder.btnAction.setOnClickListener { onItemClick(lang) }
-    }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_language, parent, false)
+            return ViewHolder(view)
+        }
 
-    override fun getItemCount() = languages.size
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val language = languages[position]
+            holder.nameText.text = language.name
+            holder.nativeText.text = language.nativeName
+
+            holder.progressBar.visibility = if (language.isDownloading) View.VISIBLE else View.GONE
+            holder.downloadBtn.visibility = if (language.isDownloading) View.GONE else View.VISIBLE
+
+            if (language.isDownloaded) {
+                holder.downloadBtn.text = "Remover"
+                holder.downloadBtn.setBackgroundResource(R.drawable.btn_downloaded)
+            } else {
+                holder.downloadBtn.text = "Baixar"
+                holder.downloadBtn.setBackgroundResource(R.drawable.btn_download)
+            }
+
+            holder.downloadBtn.setOnClickListener {
+                onClick(language, language.isDownloading)
+            }
+        }
+
+        override fun getItemCount() = languages.size
+    }
 }

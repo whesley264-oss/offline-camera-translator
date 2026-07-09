@@ -11,9 +11,11 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.offline.translator.databinding.ActivityHistoryBinding
 import com.offline.translator.model.HistoryManager
+import com.offline.translator.model.PreferencesManager
 import com.offline.translator.model.TextToSpeechService
 
 class HistoryActivity : AppCompatActivity() {
@@ -21,22 +23,28 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var historyManager: HistoryManager
     private lateinit var tts: TextToSpeechService
     private lateinit var adapter: HistoryAdapter
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = PreferencesManager(this)
+        AppCompatDelegate.setDefaultNightMode(
+            if (prefs.isDarkMode()) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
+        
         super.onCreate(savedInstanceState)
         binding = ActivityHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         historyManager = HistoryManager(this)
         tts = TextToSpeechService(this)
-        
+
         setupUI()
         loadHistory()
     }
-    
+
     private fun setupUI() {
         binding.btnBack.setOnClickListener { finish() }
-        
+
         binding.btnClear.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Limpar Histórico")
@@ -49,7 +57,7 @@ class HistoryActivity : AppCompatActivity() {
                 .setNegativeButton("Cancelar", null)
                 .show()
         }
-        
+
         binding.editSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -58,7 +66,7 @@ class HistoryActivity : AppCompatActivity() {
                 filterHistory(query)
             }
         })
-        
+
         adapter = HistoryAdapter(
             items = emptyList(),
             onSpeak = { text -> speakText(text) },
@@ -66,16 +74,16 @@ class HistoryActivity : AppCompatActivity() {
             onCopy = { text -> copyText(text) },
             onDelete = { id -> deleteItem(id) }
         )
-        
+
         binding.recyclerHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerHistory.adapter = adapter
     }
-    
+
     private fun loadHistory() {
         val history = historyManager.getHistory()
         updateUI(history)
     }
-    
+
     private fun filterHistory(query: String) {
         val history = if (query.isBlank()) {
             historyManager.getHistory()
@@ -84,7 +92,7 @@ class HistoryActivity : AppCompatActivity() {
         }
         updateUI(history)
     }
-    
+
     private fun updateUI(history: List<com.offline.translator.model.TranslationHistoryEntry>) {
         if (history.isEmpty()) {
             binding.emptyState.visibility = View.VISIBLE
@@ -95,7 +103,7 @@ class HistoryActivity : AppCompatActivity() {
             adapter.updateItems(history)
         }
     }
-    
+
     private fun speakText(text: String) {
         if (tts.isAvailable()) {
             tts.speakTranslation(text, "pt")
@@ -103,7 +111,7 @@ class HistoryActivity : AppCompatActivity() {
             Toast.makeText(this, "TTS não disponível", Toast.LENGTH_SHORT).show()
         }
     }
-    
+
     private fun shareText(text: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -111,19 +119,19 @@ class HistoryActivity : AppCompatActivity() {
         }
         startActivity(Intent.createChooser(shareIntent, "Compartilhar"))
     }
-    
+
     private fun copyText(text: String) {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("Tradução", text)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(this, "✓ Copiado!", Toast.LENGTH_SHORT).show()
     }
-    
+
     private fun deleteItem(id: String) {
         historyManager.deleteEntry(id)
         loadHistory()
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         tts.shutdown()
