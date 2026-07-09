@@ -12,16 +12,16 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 class TranslationService(private val context: Context) {
-    
+
     private val translators = mutableMapOf<Pair<String, String>, Translator>()
     private val modelManager = RemoteModelManager.getInstance()
-    
-    // Base languages (en, pt)
+
     val baseLanguages = setOf(Language.DEFAULT_SOURCE, Language.DEFAULT_TARGET)
-    
+
     suspend fun downloadLanguage(sourceLang: String, targetLang: String): Result<Unit> {
         return suspendCancellableCoroutine { continuation ->
             try {
+                Log.d(TAG, "Downloading model for: $sourceLang -> $targetLang")
                 val conditions = DownloadConditions.Builder().build()
                 getOrCreateTranslator(sourceLang, targetLang).downloadModelIfNeeded(conditions)
                     .addOnSuccessListener {
@@ -38,38 +38,41 @@ class TranslationService(private val context: Context) {
             }
         }
     }
-    
+
     suspend fun translate(text: String, sourceLang: String, targetLang: String): Result<String> {
         if (text.isBlank()) return Result.success("")
-        
-        // Validate languages
+
         if (sourceLang.isBlank() || targetLang.isBlank()) {
-            return Result.failure(Exception("Idioma inválido selecionado"))
+            return Result.failure(Exception("Idioma invalido selecionado"))
         }
-        
+
         if (sourceLang == targetLang) {
-            return Result.success(text) // Same language, no translation needed
+            return Result.success(text)
         }
-        
+
+        Log.d(TAG, "Translating '$text' from $sourceLang to $targetLang")
+
         return suspendCancellableCoroutine { continuation ->
             try {
                 val translator = getOrCreateTranslator(sourceLang, targetLang)
-                val conditions = DownloadConditions.Builder().build()
                 
+                val conditions = DownloadConditions.Builder().build()
                 translator.downloadModelIfNeeded(conditions)
                     .addOnSuccessListener {
+                        Log.d(TAG, "Model ready, translating...")
                         translator.translate(text)
                             .addOnSuccessListener { translatedText ->
+                                Log.d(TAG, "Translation result: '$translatedText'")
                                 continuation.resume(Result.success(translatedText))
                             }
                             .addOnFailureListener { e: Exception ->
                                 Log.e(TAG, "Translation failed: ${e.message}")
-                                continuation.resume(Result.failure(Exception("Tradução falhou: ${e.message}")))
+                                continuation.resume(Result.failure(Exception("Traducao falhou: ${e.message}")))
                             }
                     }
                     .addOnFailureListener { e: Exception ->
                         Log.e(TAG, "Model download failed: ${e.message}")
-                        continuation.resume(Result.failure(Exception("Modelo não baixado: baixe o idioma na Biblioteca")))
+                        continuation.resume(Result.failure(Exception("Modelo nao baixado: ${e.message}")))
                     }
             } catch (e: Exception) {
                 Log.e(TAG, "Translation exception: ${e.message}")
@@ -77,7 +80,7 @@ class TranslationService(private val context: Context) {
             }
         }
     }
-    
+
     suspend fun getDownloadedModels(): Set<String> {
         return suspendCancellableCoroutine { continuation ->
             try {
@@ -97,7 +100,7 @@ class TranslationService(private val context: Context) {
             }
         }
     }
-    
+
     suspend fun deleteLanguage(langCode: String): Result<Unit> {
         return suspendCancellableCoroutine { continuation ->
             try {
@@ -113,7 +116,7 @@ class TranslationService(private val context: Context) {
                                     continuation.resume(Result.failure(e))
                                 }
                         } else {
-                            continuation.resume(Result.failure(Exception("Modelo não encontrado")))
+                            continuation.resume(Result.failure(Exception("Modelo nao encontrado")))
                         }
                     }
                     .addOnFailureListener { e: Exception ->
@@ -124,7 +127,7 @@ class TranslationService(private val context: Context) {
             }
         }
     }
-    
+
     fun isModelDownloaded(langCode: String, callback: (Boolean) -> Unit) {
         try {
             modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
@@ -136,10 +139,11 @@ class TranslationService(private val context: Context) {
             callback(false)
         }
     }
-    
+
     private fun getOrCreateTranslator(sourceLang: String, targetLang: String): Translator {
         val key = Pair(sourceLang, targetLang)
         return translators.getOrPut(key) {
+            Log.d(TAG, "Creating new translator for: $sourceLang -> $targetLang")
             val options = TranslatorOptions.Builder()
                 .setSourceLanguage(sourceLang)
                 .setTargetLanguage(targetLang)
@@ -147,12 +151,12 @@ class TranslationService(private val context: Context) {
             Translation.getClient(options)
         }
     }
-    
+
     fun closeTranslators() {
         translators.values.forEach { it.close() }
         translators.clear()
     }
-    
+
     companion object {
         private const val TAG = "TranslationService"
     }
