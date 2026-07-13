@@ -2,17 +2,16 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Android](https://img.shields.io/badge/Android-5.0%2B-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-![Build](https://img.shields.io/github/actions/workflow/status/whesley264-oss/offline-camera-translator/android_build.yml)
-[![Release](https://img.shields.io/github/v/release/whesley264-oss/offline-camera-translator?include_prereleases)](https://github.com/whesley264-oss/offline-camera-translator/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/whesley264-oss/offline-camera-translator/releases)
+[![Android](https://img.shields.io/badge/Android-5.0%2B-brightgreen?style=flat-square)](https://developer.android.com/about)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/whesley264-oss/offline-camera-translator/android_build.yml?style=flat-square)](https://github.com/whesley264-oss/offline-camera-translator/actions)
+[![Stars](https://img.shields.io/github/stars/whesley264-oss/offline-camera-translator?style=social)](https://github.com/whesley264-oss/offline-camera-translator/stargazers)
+[![Forks](https://img.shields.io/github/forks/whesley264-oss/offline-camera-translator?style=social)](https://github.com/whesley264-oss/offline-camera-translator/network/members)
 
 **100% Offline Camera Translator for Android with Neural Machine Translation**
 
 *Translate text from images using your camera or type directly — no internet required after downloading language packs.*
-
-[🇧🇷 Português](./docs/README_pt-BR.md) | [🇺🇸 English](./docs/README_en-US.md)
 
 </div>
 
@@ -28,59 +27,74 @@
 | 🌐 **100% Offline** | Works without internet after downloading language packs |
 | 🔊 **Text-to-Speech** | Listen to translations with humanized voices |
 | 📚 **Language Library** | Download and manage offline language packs |
+| 🌙 **Dark Mode** | Modern dark theme support |
+| 📋 **Clipboard Translation** | Auto-translate copied text |
 
 ---
 
 ## 📥 Download
 
-| Version | Type | Download |
-|---------|------|----------|
-| **v1.0.0** | Stable | [Download APK](https://github.com/whesley264-oss/offline-camera-translator/releases/latest) |
-| Beta | Testing | [Download Beta](https://github.com/whesley264-oss/offline-camera-translator/releases) |
+### Latest Release
+
+Download the latest APK from the [Releases page](https://github.com/whesley264-oss/offline-camera-translator/releases/latest).
+
+### Build from Source
+
+```bash
+git clone https://github.com/whesley264-oss/offline-camera-translator.git
+cd offline-camera-translator
+./gradlew assembleDebug
+```
+
+APK will be at: `app/build/outputs/apk/debug/app-debug.apk`
 
 ### Installation
 
-1. Download APK from [latest release](https://github.com/whesley264-oss/offline-camera-translator/releases/latest)
-2. On your phone, go to **Settings > Security**
-3. Enable **"Unknown sources"**
-4. Open the downloaded `.apk` file
-5. Tap **Install**
+1. Download the APK from [Releases](https://github.com/whesley264-oss/offline-camera-translator/releases/latest)
+2. Enable "Install from unknown sources" in Settings
+3. Open and install the APK
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology | Usage |
-|------------|-------|
+| Technology | Purpose |
+|------------|---------|
 | **Kotlin** | Primary language |
 | **CameraX** | Camera capture |
 | **ML Kit Translation** | Offline NMT translation |
 | **ML Kit Text Recognition** | OCR |
 | **NDK/JNI** | Native C engine |
 | **Material Design 3** | UI framework |
+| **Coroutines** | Async operations |
 
 ---
 
-## 🔧 Build from Source
-
-```bash
-# Clone repository
-git clone https://github.com/whesley264-oss/offline-camera-translator.git
-cd offline-camera-translator
-
-# Build debug APK
-./gradlew assembleDebug
-
-# APK location: app/build/outputs/apk/debug/
-```
+## 🔧 Build
 
 ### Requirements
 
 | Requirement | Minimum | Recommended |
 |-------------|---------|--------------|
-| Android | 5.0 (API 21) | 10.0+ (API 29) |
-| RAM | 2 GB | 4 GB+ |
-| Storage | 100 MB | 500 MB+ |
+| Java JDK | 17 | 17+ |
+| Android SDK | API 21 | API 34 |
+| Android Studio | 2024.1 | Latest |
+
+### Commands
+
+```bash
+# Debug build
+./gradlew assembleDebug
+
+# Release build
+./gradlew assembleRelease
+
+# Clean
+./gradlew clean
+
+# Dependencies
+./gradlew dependencies
+```
 
 ---
 
@@ -88,10 +102,9 @@ cd offline-camera-translator
 
 | Document | Description |
 |----------|-------------|
-| [📖 Technical Documentation](./docs/TECHNICAL.md) | How the app works, architecture, OCR & NMT details |
-| [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design and component interaction |
-| [🚀 Setup Guide](./docs/SETUP.md) | Development environment setup |
-| [📋 Contributing](./CONTRIBUTING.md) | How to contribute |
+| [📖 Technical](./docs/TECHNICAL.md) | How it works, OCR & NMT pipeline |
+| [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design |
+| [🚀 Setup](./docs/SETUP.md) | Dev environment setup |
 | [📝 Changelog](./CHANGELOG.md) | Release history |
 
 ---
@@ -104,14 +117,13 @@ offline-camera-translator/
 │   └── src/main/
 │       ├── java/com/offline/translator/
 │       │   ├── model/           # Business logic
-│       │   ├── view/            # UI (Activities/Fragments)
+│       │   ├── view/            # Activities & Fragments
 │       │   ├── service/         # Background services
 │       │   └── widget/          # App widgets
-│       ├── res/                 # Layouts, drawables, values
-│       └── cpp/                 # Native C translation engine
-├── docs/                        # Technical documentation
-├── analysis/                    # Data analysis scripts
-└── .github/workflows/          # CI/CD pipelines
+│       ├── res/                 # Resources
+│       └── cpp/                 # Native C engine
+├── docs/                        # Documentation
+└── .github/workflows/          # CI/CD
 ```
 
 ---
@@ -121,7 +133,7 @@ offline-camera-translator/
 **Q: Does it work offline?**
 A: Yes! After downloading language packs, no internet is required.
 
-**Q: How much storage?**
+**Q: How much storage space?**
 A: ~30-50MB per language pair.
 
 **Q: How many languages?**
@@ -131,16 +143,16 @@ A: 50+ languages supported.
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ---
 
 ## 📜 License
 
-MIT License - see [LICENSE](./LICENSE)
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
-  Made with ❤️ in Brazil 🇧🇷
+  Built with ❤️ by <a href="https://github.com/whesley264">@whesley264</a>
 </p>
