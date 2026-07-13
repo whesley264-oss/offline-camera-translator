@@ -1,9 +1,44 @@
 # Changelog
 
-Todas as mudançasnotáveis neste projeto serão documentadas neste arquivo.
+Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
+
+---
+
+## [Unreleased]
+
+### 🐛 Correções
+
+#### Tradução
+- **Tradução parcial**: Corrigido bug onde frases completas traduziam apenas a primeira palavra (race condition com Dispatchers.IO)
+- **Import faltando**: Adicionado import `kotlinx.coroutines.launch` em TextTranslationFragment
+
+#### Configurações
+- **Settings não salvavam**: Corrigido problema onde configurações não eram salvas ao alterar
+  - Adicionado flag `isInitializing` para evitar que listeners salvem durante carregamento
+  - Removida duplicação de `PreferencesManager`
+  - Adicionado `coerceIn` para tamanho de fonte prevenir índice fora dos limites
+  - Corrigido toggle de tema para usar novo Intent
+
+### 🧹 Limpeza
+
+- Removido `app-debug.apk` e `debug-apk.zip` do repositório (~55MB)
+- Removida pasta `analysis/` (scripts Python/Jupyter irrelevantes)
+- Removido `stats_data.json` (dados locais)
+- Removido `docs/logo.png` (redundante, logo já existe em mipmap-*)
+- Removido `docs/README_COMPLETO.md` (substituído por estrutura profissional)
+- Adicionado `.gitignore` completo para projetos Android
+
+### 📚 Documentação
+
+- Novo `README.md` profissional com badges e links para documentação
+- Novo `docs/TECHNICAL.md` - Documentação técnica (pipeline OCR→NMT)
+- Novo `docs/ARCHITECTURE.md` - Arquitetura do sistema
+- Novo `docs/SETUP.md` - Guia de configuração de desenvolvimento
+
+---
 
 ## [1.0.0] - 2024-01-15
 
@@ -52,14 +87,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
-## Modelos de Release
-
-| Tipo | Descrição | Quando usar |
-|------|-----------|-------------|
-| **major** | Mudanças incompatíveis | Rewrites, mudanças de API |
-| **minor** | Funcionalidades novas | Novas features |
-| **patch** | Correções de bugs | Bug fixes |
-
 ## Formato de Commits
 
 Este projeto usa commits convencionais:
@@ -80,4 +107,3 @@ chore: manutenção
 
 - [Releases](https://github.com/whesley264-oss/offline-camera-translator/releases)
 - [Issues](https://github.com/whesley264-oss/offline-camera-translator/issues)
-- [Wiki](https://github.com/whesley264-oss/offline-camera-translator/wiki)
