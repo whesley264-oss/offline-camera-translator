@@ -1,109 +1,111 @@
 # Changelog
 
-Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+All notable changes to this project will be documented in this file.
 
-O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
-e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
 ## [Unreleased]
 
-### 🐛 Correções
+### 🐛 Fixed
 
-#### Tradução
-- **Tradução parcial**: Corrigido bug onde frases completas traduziam apenas a primeira palavra (race condition com Dispatchers.IO)
-- **Import faltando**: Adicionado import `kotlinx.coroutines.launch` em TextTranslationFragment
+#### Translation
+- **Partial translation bug**: Fixed issue where full sentences translated only the first word (race condition with Dispatchers.IO)
+- **Missing import**: Added `kotlinx.coroutines.launch` import in TextTranslationFragment
 
-#### Configurações
-- **Settings não salvavam**: Corrigido problema onde configurações não eram salvas ao alterar
-  - Adicionado flag `isInitializing` para evitar que listeners salvem durante carregamento
-  - Removida duplicação de `PreferencesManager`
-  - Adicionado `coerceIn` para tamanho de fonte prevenir índice fora dos limites
-  - Corrigido toggle de tema para usar novo Intent
+#### Settings
+- **Settings not saving**: Fixed issue where settings changes were not saved
+  - Added `isInitializing` flag to prevent listeners from firing during initialization
+  - Removed duplicate `PreferencesManager` initialization
+  - Added `coerceIn` for font size to prevent index out of bounds
+  - Fixed theme toggle to use new Intent
 
-### 🧹 Limpeza
+### 🧹 Cleanup
 
-- Removido `app-debug.apk` e `debug-apk.zip` do repositório (~55MB)
-- Removida pasta `analysis/` (scripts Python/Jupyter irrelevantes)
-- Removido `stats_data.json` (dados locais)
-- Removido `docs/logo.png` (redundante, logo já existe em mipmap-*)
-- Removido `docs/README_COMPLETO.md` (substituído por estrutura profissional)
-- Adicionado `.gitignore` completo para projetos Android
+- Removed `app-debug.apk` and `debug-apk.zip` from repository (~55MB)
+- Removed `analysis/` folder (irrelevant Python/Jupyter scripts)
+- Removed `stats_data.json` (local data)
+- Removed `docs/logo.png` (redundant, logo exists in mipmap-*)
+- Removed `docs/README_COMPLETO.md` (replaced with professional structure)
+- Removed fake company references (PELKO)
+- Added comprehensive `.gitignore` for Android projects
 
-### 📚 Documentação
+### 📚 Documentation
 
-- Novo `README.md` profissional com badges e links para documentação
-- Novo `docs/TECHNICAL.md` - Documentação técnica (pipeline OCR→NMT)
-- Novo `docs/ARCHITECTURE.md` - Arquitetura do sistema
-- Novo `docs/SETUP.md` - Guia de configuração de desenvolvimento
+- New professional `README.md` with badges and links
+- New `docs/TECHNICAL.md` - Technical documentation (OCR→NMT pipeline)
+- New `docs/ARCHITECTURE.md` - System architecture
+- New `docs/SETUP.md` - Development setup guide
+- Updated `CONTRIBUTING.md` with clean guidelines
 
 ---
 
 ## [1.0.0] - 2024-01-15
 
-### ✅ Adicionado
+### ✅ Added
 
-#### Tradução
-- Tradução de texto digitado
-- Tradução de imagem (câmera)
-- Seleção de idiomas de origem e destino
-- Troca rápida de idiomas
+#### Translation
+- Text input translation
+- Camera image translation
+- Source and target language selection
+- Quick language swap
 
-#### Biblioteca de Idiomas
-- Download de idiomas para uso offline
-- Gerenciamento de idiomas baixados
-- Suporte a múltiplos pares de idiomas (en↔pt)
+#### Language Library
+- Download languages for offline use
+- Manage downloaded languages
+- Support for multiple language pairs (en↔pt)
 
 #### Interface
-- Tema escuro moderno
-- Abas para texto e imagem
-- Seleção de área de tradução
-- Preview da câmera
+- Modern dark theme
+- Tabs for text and image
+- Translation area selection
+- Camera preview
 
-#### Recursos Técnicos
-- 100% offline (sem internet após download dos idiomas)
-- NDK/JNI para engine C de tradução
-- CameraX para captura de imagem
-- ML Kit para OCR e tradução
-- ViewBinding para performance
+#### Technical
+- 100% offline (no internet after downloading languages)
+- NDK/JNI for C translation engine
+- CameraX for image capture
+- ML Kit for OCR and translation
+- ViewBinding for performance
 
-### 📱 Requisitos
+### 📱 Requirements
 
 - Android 5.0+ (API 21)
-- ~100MB de armazenamento para idiomas
-- Câmera para tradução de imagem
+- ~100MB storage for languages
+- Camera for image translation
 
 ---
 
 ## [0.1.0] - 2024-01-10
 
-### 🧪 Adicionado
+### 🧪 Added
 
-- Projeto inicial com estrutura MVP
-- Interface básica de tradução
-- Engine C de tradução
-- Layouts iniciais
-
----
-
-## Formato de Commits
-
-Este projeto usa commits convencionais:
-
-```
-feat: nova funcionalidade
-fix: correção de bug
-docs: documentação
-style: formatação
-refactor: refatoração
-test: testes
-chore: manutenção
-```
+- Initial project with MVP structure
+- Basic translation interface
+- C translation engine
+- Initial layouts
 
 ---
 
-## Links Úteis
+## Commit Format
+
+This project uses conventional commits:
+
+```
+feat: new feature
+fix: bug fix
+docs: documentation
+style: formatting
+refactor: refactoring
+test: tests
+chore: maintenance
+```
+
+---
+
+## Links
 
 - [Releases](https://github.com/whesley264-oss/offline-camera-translator/releases)
 - [Issues](https://github.com/whesley264-oss/offline-camera-translator/issues)

@@ -1,94 +1,103 @@
-# Como Contribuir
+# Contributing to Offline Camera Translator
 
-Obrigado por contribuir com o Offline Camera Translator! 🎉
+Thank you for your interest in contributing! 🎉
 
-## 📋 Como Começar
+## How to Contribute
 
-1. **Fork** este repositório
-2. **Clone** seu fork: `git clone https://github.com/SEU_USUARIO/offline-camera-translator.git`
-3. **Crie uma branch**: `git checkout -b feature/sua-feature`
-4. **Faça suas alterações**
-5. **Commit**: `git commit -m 'feat: adiciona nova feature'`
-6. **Push**: `git push origin feature/sua-feature`
-7. **Abra um Pull Request**
+### 1. Fork the Repository
 
-## 🎯 Areas para Contribuir
+Click the "Fork" button on the top right of this repository.
 
-### 🐛 Correção de Bugs
-- Issues com label `bug`
-- Melhorias de performance
-- Correções de UI/UX
-
-### ✨ Novas Funcionalidades
-- Novos pares de idiomas
-- Melhorias no OCR
-- Features solicitadas na comunidade
-
-### 📚 Documentação
-- Melhora do README
-- Tutoriais
-- Tradução da documentação
-
-### 🧪 Testes
-- Testes de tradução
-- Testes de performance
-- Testes de UI
-
-## 📝 Padrões de Código
-
-### Kotlin
-- Use `val` ao invés de `var` quando possível
-- Sigas as convenções do Kotlin
-- Document funções públicas
-
-### Commits
-Usamos commits convencionais:
-```
-feat: nova funcionalidade
-fix: correção de bug  
-docs: documentação
-style: formatação
-refactor: refatoração
-test: testes
-chore: manutenção
-```
-
-### Pull Requests
-- Descreva claramente o que foi feito
-- Inclua screenshots se houver mudança de UI
-- Referencie issues relacionadas
-- Aguarde review antes de fazer merge
-
-## 🔧 Configuração do Ambiente
+### 2. Clone Your Fork
 
 ```bash
-# Clone o repositório
-git clone https://github.com/whesley264-oss/offline-camera-translator.git
-
-# Entre na pasta
+git clone https://github.com/YOUR_USERNAME/offline-camera-translator.git
 cd offline-camera-translator
-
-# Abra no Android Studio
-# Ou build via linha de comando:
-./gradlew assembleDebug
 ```
 
-## 📖 Recursos
+### 3. Create a Branch
 
-- [Android Developer Docs](https://developer.android.com/docs)
-- [Kotlin Docs](https://kotlinlang.org/docs/home.html)
-- [ML Kit](https://developers.google.com/ml-kit)
+```bash
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/your-bug-fix
+```
 
-## ❓ Dúvidas?
+### 4. Make Your Changes
 
-- Abra uma [Issue](https://github.com/whesley264-oss/offline-camera-translator/issues)
-- Marque com label `question`
+- Write clean, well-documented code
+- Follow Kotlin conventions
+- Test your changes
 
-## 📄 Licença
+### 5. Commit
 
-Ao contribuir, você concorda que suas contribuições serão licenciadas
-sob a Licença MIT.
+We use conventional commits:
 
----
+```bash
+git commit -m 'feat: add new feature'
+git commit -m 'fix: resolve translation bug'
+git commit -m 'docs: update documentation'
+git commit -m 'refactor: improve code structure'
+```
 
-⭐️ Valeu pela contribuição!
+### 6. Push and Create PR
+
+```bash
+git push origin your-branch-name
+```
+
+Then open a Pull Request on GitHub.
+
+## Contribution Areas
+
+### 🐛 Bug Fixes
+- Translation accuracy issues
+- UI/UX problems
+- Performance improvements
+- Crash fixes
+
+### ✨ New Features
+- New language pairs
+- OCR improvements
+- Community-requested features
+
+### 📚 Documentation
+- README improvements
+- Code documentation
+- Translation of docs
+
+## Code Standards
+
+### Kotlin
+- Use `val` instead of `var` when possible
+- Follow Kotlin conventions
+- Document public functions
+- Keep functions small and focused
+
+### Pull Requests
+- Clear title and description
+- Include screenshots for UI changes
+- Reference related issues
+- Wait for review before merging
+
+## Development Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/whesley264-oss/offline-camera-translator.git
+cd offline-camera-translator
+
+# Build debug APK
+./gradlew assembleDebug
+
+# Run tests
+./gradlew test
+```
+
+## Questions?
+
+Open an [Issue](https://github.com/whesley264-oss/offline-camera-translator/issues) with the `question` label.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.

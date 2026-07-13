@@ -30,7 +30,7 @@ class ClipboardTranslationService : Service() {
     private var isProcessing = false
 
     companion object {
-        const val CHANNEL_ID = "pelko_clipboard_channel"
+        const val CHANNEL_ID = "translator_clipboard_channel"
         const val NOTIFICATION_ID = 1001
         const val FOREGROUND_NOTIFICATION_ID = 1000
 
