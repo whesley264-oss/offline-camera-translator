@@ -126,9 +126,9 @@ class LanguageLibraryActivity : AppCompatActivity() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val nameText: TextView = view.findViewById(R.id.txtLanguageName)
-            val nativeText: TextView = view.findViewById(R.id.txtNativeName)
-            val downloadBtn: Button = view.findViewById(R.id.btnDownload)
-            val progressBar: ProgressBar = view.findViewById(R.id.progressBar)
+            val statusText: TextView = view.findViewById(R.id.txtStatus)
+            val downloadBtn: Button = view.findViewById(R.id.btnAction)
+            val progressBar: ProgressBar = view.findViewById(R.id.progressDownload)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -139,7 +139,7 @@ class LanguageLibraryActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val language = languages[position]
             holder.nameText.text = language.name
-            holder.nativeText.text = language.nativeName
+            holder.statusText.text = if (language.isDownloaded) "Baixado" else "Não baixado"
 
             holder.progressBar.visibility = if (language.isDownloading) View.VISIBLE else View.GONE
             holder.downloadBtn.visibility = if (language.isDownloading) View.GONE else View.VISIBLE
