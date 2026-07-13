@@ -18,7 +18,10 @@ import com.offline.translator.R
 import com.offline.translator.databinding.FragmentTextTranslationBinding
 import com.offline.translator.model.*
 import com.offline.translator.widget.TranslationWidgetProvider
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 class TextTranslationFragment : Fragment() {
     private var _binding: FragmentTextTranslationBinding? = null
@@ -236,49 +239,45 @@ class TextTranslationFragment : Fragment() {
         binding.btnTranslate.isEnabled = false
         binding.btnTranslate.text = "Traduzindo..."
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             try {
-                Log.d(TAG, "Starting translation in IO thread...")
+                Log.d(TAG, "Starting translation...")
                 val result = translationService.translate(inputText, selectedSource, selectedTarget)
                 Log.d(TAG, "Translation completed, updating UI...")
                 
-                withContext(Dispatchers.Main) {
-                    result.fold(
-                        onSuccess = { translated ->
-                            Log.d(TAG, "Translation result: '$translated'")
-                            binding.editTextOutput.setText(translated)
-                            binding.btnTranslate.isEnabled = true
-                            binding.btnTranslate.text = "TRADUZIR"
-                            Toast.makeText(context, "✓ Tradução completa!", Toast.LENGTH_SHORT).show()
+                result.fold(
+                    onSuccess = { translated ->
+                        Log.d(TAG, "Translation result: '$translated'")
+                        binding.editTextOutput.setText(translated)
+                        binding.btnTranslate.isEnabled = true
+                        binding.btnTranslate.text = "TRADUZIR"
+                        Toast.makeText(context, "✓ Tradução completa!", Toast.LENGTH_SHORT).show()
 
-                            TranslationWidgetProvider.updateLastTranslation(requireContext(), inputText, translated)
+                        TranslationWidgetProvider.updateLastTranslation(requireContext(), inputText, translated)
 
-                            try {
-                                val recordId = statsManager.saveTranslation(
-                                    inputText, translated, selectedSource, selectedTarget, TranslationType.TEXT
-                                )
-                                historyManager.saveTranslation(
-                                    inputText, translated, selectedSource, selectedTarget, "text"
-                                )
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error saving: ${e.message}")
-                            }
-                        },
-                        onFailure = { e ->
-                            Log.e(TAG, "Translation failed: ${e.message}")
-                            binding.btnTranslate.isEnabled = true
-                            binding.btnTranslate.text = "TRADUZIR"
-                            Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                        try {
+                            val recordId = statsManager.saveTranslation(
+                                inputText, translated, selectedSource, selectedTarget, TranslationType.TEXT
+                            )
+                            historyManager.saveTranslation(
+                                inputText, translated, selectedSource, selectedTarget, "text"
+                            )
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error saving: ${e.message}")
                         }
-                    )
-                }
+                    },
+                    onFailure = { e ->
+                        Log.e(TAG, "Translation failed: ${e.message}")
+                        binding.btnTranslate.isEnabled = true
+                        binding.btnTranslate.text = "TRADUZIR"
+                        Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Exception: ${e.message}")
-                withContext(Dispatchers.Main) {
-                    binding.btnTranslate.isEnabled = true
-                    binding.btnTranslate.text = "TRADUZIR"
-                    Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                binding.btnTranslate.isEnabled = true
+                binding.btnTranslate.text = "TRADUZIR"
+                Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
